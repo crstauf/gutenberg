@@ -30,6 +30,7 @@ import {
 	NAVIGATION_POST_TYPE,
 } from '../../store/constants';
 import { unlock } from '../../lock-unlock';
+import { Slot as EditorPresenceSlot } from '../editor-presence';
 
 function Header( {
 	customSaveButton,
@@ -120,7 +121,22 @@ function Header( {
 					) }
 				</>
 			}
-			center={ hasCenter ? <DocumentBar /> : undefined }
+			center={
+				hasCenter ? (
+					<>
+						<EditorPresenceSlot>
+							{ ( fills ) =>
+								fills?.length ? (
+									<div className="editor-header__editor-presence">
+										{ fills }
+									</div>
+								) : null
+							}
+						</EditorPresenceSlot>
+						<DocumentBar />{ ' ' }
+					</>
+				) : undefined
+			}
 			settings={
 				<>
 					{ ! customSaveButton && ! isPublishSidebarOpened && (
