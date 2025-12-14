@@ -3,7 +3,7 @@
  */
 import { MenuItem } from '@wordpress/components';
 import { _x } from '@wordpress/i18n';
-import { useSelect } from '@wordpress/data';
+import { useSelect, useDispatch } from '@wordpress/data';
 import { isReusableBlock, isTemplatePart } from '@wordpress/blocks';
 
 /**
@@ -18,7 +18,7 @@ export function EditSectionMenuItem( { clientId, onClose } ) {
 		isEditingContentOnlySection,
 		editContentOnlySection,
 	} = useContentOnlySectionEdit( clientId );
-
+	const { selectBlock } = useDispatch( blockEditorStore );
 	const { block, onNavigateToEntityRecord } = useSelect(
 		( select ) => {
 			const { getBlock, getSettings } = select( blockEditorStore );
@@ -65,6 +65,7 @@ export function EditSectionMenuItem( { clientId, onClose } ) {
 		} else {
 			// Use spotlight mode for unsynced patterns
 			editContentOnlySection( clientId );
+			selectBlock( clientId );
 		}
 		onClose();
 	};

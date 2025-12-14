@@ -11,7 +11,11 @@ import { useRef } from '@wordpress/element';
  * Internal dependencies
  */
 import { store as blockEditorStore } from '../../store';
-import { isInSameBlock, isInsideRootBlock } from '../../utils/dom';
+import {
+	getBlockClientId,
+	isInSameBlock,
+	isInsideRootBlock,
+} from '../../utils/dom';
 import { unlock } from '../../lock-unlock';
 
 export default function useTabNav() {
@@ -27,6 +31,8 @@ export default function useTabNav() {
 		getLastFocus,
 		getSectionRootClientId,
 		isZoomOut,
+		getEditedContentOnlySection,
+		isWithinEditedContentOnlySection,
 	} = unlock( useSelect( blockEditorStore ) );
 	const { setLastFocus } = unlock( useDispatch( blockEditorStore ) );
 
@@ -137,6 +143,26 @@ export default function useTabNav() {
 			const { target, shiftKey: isShift } = event;
 			const direction = isShift ? 'findPrevious' : 'findNext';
 			const nextTabbable = focus.tabbable[ direction ]( target );
+
+			// When in content-only pattern editing mode, prevent tabbing outside
+			// the pattern boundary.
+			if (
+				window?.__experimentalContentOnlyPatternInsertion &&
+				nextTabbable
+			) {
+				const editedContentOnlySection = getEditedContentOnlySection();
+				if ( editedContentOnlySection ) {
+					const nextBlockClientId = getBlockClientId( nextTabbable );
+					if (
+						nextBlockClientId &&
+						! isWithinEditedContentOnlySection( nextBlockClientId )
+					) {
+						// Prevent tabbing outside the pattern boundary.
+						event.preventDefault();
+						return;
+					}
+				}
+			}
 
 			// We want to constrain the tabbing to the block and its child blocks.
 			// If the preceding form element is within a different block,

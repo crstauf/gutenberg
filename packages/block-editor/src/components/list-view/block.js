@@ -101,6 +101,7 @@ function ListViewBlock( {
 		removeBlocks,
 		insertAfterBlock,
 		insertBeforeBlock,
+		stopEditingContentOnlySection,
 	} = unlock( useDispatch( blockEditorStore ) );
 
 	const debouncedToggleBlockHighlight = useDebounce(
@@ -128,51 +129,52 @@ function ListViewBlock( {
 
 	const pasteStyles = usePasteStyles();
 
-	const { block, blockName, allowRightClickOverrides, selectedDeviceType } =
-		useSelect(
-			( select ) => {
-				const { getBlock, getBlockName, getSettings } = unlock(
-					select( blockEditorStore )
-				);
-
-				return {
-					block: getBlock( clientId ),
-					blockName: getBlockName( clientId ),
-					allowRightClickOverrides:
-						getSettings().allowRightClickOverrides,
-					selectedDeviceType:
-						getSettings()?.[ deviceTypeKey ]?.toLowerCase() ||
-						BLOCK_VISIBILITY_VIEWPORTS.desktop.value,
-				};
-			},
-			[ clientId ]
-		);
-	const { canRename } = useBlockRename( blockName );
-	// Use hook to get current viewport and if block is currently hidden (accurate viewport detection)
-	const { isBlockCurrentlyHidden, currentViewport } = useBlockVisibility( {
-		blockVisibility: block?.attributes?.metadata?.blockVisibility,
-		deviceType: selectedDeviceType,
-	} );
-
-	// Determine label based on whether block or parent is hidden
-	const blockVisibilityDescription = useMemo( () => {
-		if ( isBlockCurrentlyHidden ) {
-			if ( block?.attributes?.metadata?.blockVisibility === false ) {
-				return __( 'Block is hidden' );
-			}
-			return sprintf(
-				/* translators: %s: viewport name (Desktop, Tablet, Mobile) */
-				__( 'Block is hidden on %s' ),
-				BLOCK_VISIBILITY_VIEWPORTS[ currentViewport ]?.label ||
-					currentViewport
+	const {
+		block,
+		blockName,
+		allowRightClickOverrides,
+		selectedDeviceType,
+		isSpotlightActive,
+		editedSection,
+		isWithinEditedSection
+	} =
+	useSelect(
+		( select ) => {
+			const {
+				getBlock,
+				getBlockName,
+				getSettings,
+				hasBlockSpotlight,
+				getEditedContentOnlySection,
+				isWithinEditedContentOnlySection
+			} = unlock(
+				select( blockEditorStore )
 			);
-		}
-		return null;
-	}, [
-		isBlockCurrentlyHidden,
-		block?.attributes?.metadata?.blockVisibility,
-		currentViewport,
-	] );
+			const editedContentOnlySection = getEditedContentOnlySection();
+
+			return {
+				block: getBlock( clientId ),
+				blockName: getBlockName( clientId ),
+				allowRightClickOverrides:
+					getSettings().allowRightClickOverrides,
+				selectedDeviceType:
+					getSettings()?.[ deviceTypeKey ]?.toLowerCase() ||
+					BLOCK_VISIBILITY_VIEWPORTS.desktop.value,
+				isSpotlightActive: hasBlockSpotlight(),
+				editedSection: editedContentOnlySection,
+				isWithinEditedSection: editedContentOnlySection
+					? isWithinEditedContentOnlySection( clientId )
+					: false,
+			};
+		},
+		[ clientId ]
+	);
+
+	const shouldFadeInSpotlight = editedSection
+		? ! isWithinEditedSection
+		: isSpotlightActive && ! ( isSelected || isBranchSelected );
+	const shouldDisableInteractions =
+		!! editedSection && ! isWithinEditedSection;
 
 	const showBlockActions =
 		// When a block hides its toolbar it also hides the block settings menu,
@@ -427,20 +429,49 @@ function ListViewBlock( {
 	}
 
 	const onMouseEnter = useCallback( () => {
+		// Disable hover when section editing excludes this block.
+		if ( shouldDisableInteractions ) {
+			return;
+		}
 		setIsHovered( true );
 		debouncedToggleBlockHighlight( clientId, true );
-	}, [ clientId, setIsHovered, debouncedToggleBlockHighlight ] );
+	}, [
+		clientId,
+		setIsHovered,
+		debouncedToggleBlockHighlight,
+		shouldDisableInteractions,
+	] );
 	const onMouseLeave = useCallback( () => {
+		// Disable hover when section editing excludes this block.
+		if ( shouldDisableInteractions ) {
+			return;
+		}
 		setIsHovered( false );
 		debouncedToggleBlockHighlight( clientId, false );
-	}, [ clientId, setIsHovered, debouncedToggleBlockHighlight ] );
+	}, [
+		clientId,
+		setIsHovered,
+		debouncedToggleBlockHighlight,
+		shouldDisableInteractions,
+	] );
 
 	const selectEditorBlock = useCallback(
 		( event ) => {
+			// If we're editing a section and clicking outside it, exit section editing.
+			if ( shouldDisableInteractions ) {
+				stopEditingContentOnlySection();
+				event.preventDefault();
+				return;
+			}
 			selectBlock( event, clientId );
 			event.preventDefault();
 		},
-		[ clientId, selectBlock ]
+		[
+			clientId,
+			selectBlock,
+			shouldDisableInteractions,
+			stopEditingContentOnlySection,
+		]
 	);
 
 	const updateFocusAndSelection = useCallback(
@@ -456,6 +487,12 @@ function ListViewBlock( {
 
 	const toggleExpanded = useCallback(
 		( event ) => {
+			// Prevent expanding/collapsing blocks outside the edited section.
+			if ( shouldDisableInteractions ) {
+				event.preventDefault();
+				event.stopPropagation();
+				return;
+			}
 			// Prevent shift+click from opening link in a new window when toggling.
 			event.preventDefault();
 			event.stopPropagation();
@@ -465,7 +502,7 @@ function ListViewBlock( {
 				expand( clientId );
 			}
 		},
-		[ clientId, expand, collapse, isExpanded ]
+		[ clientId, expand, collapse, isExpanded, shouldDisableInteractions ]
 	);
 
 	// Allow right-clicking an item in the List View to open up the block settings dropdown.
@@ -584,6 +621,7 @@ function ListViewBlock( {
 		'is-displacement-down': displacement === 'down',
 		'is-after-dragged-blocks': isAfterDraggedBlocks,
 		'is-nesting': isNesting,
+		'is-faded-in-spotlight': shouldFadeInSpotlight,
 	} );
 
 	// Only include all selected blocks if the currently clicked on block
@@ -621,6 +659,7 @@ function ListViewBlock( {
 				colSpan={ colSpan }
 				ref={ cellRef }
 				aria-selected={ !! isSelected }
+				aria-disabled={ shouldDisableInteractions ? 'true' : undefined }
 			>
 				{ ( { ref, tabIndex, onFocus } ) => (
 					<div className="block-editor-list-view-block__contents-container">
