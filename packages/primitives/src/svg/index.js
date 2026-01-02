@@ -13,56 +13,56 @@ import { createElement, forwardRef } from '@wordpress/element';
 /**
  * @param {import('react').ComponentPropsWithoutRef<'circle'>} props
  *
- * @return {JSX.Element} Circle component
+ * @return {import('react').JSX.Element} Circle component
  */
 export const Circle = ( props ) => createElement( 'circle', props );
 
 /**
  * @param {import('react').ComponentPropsWithoutRef<'g'>} props
  *
- * @return {JSX.Element} G component
+ * @return {import('react').JSX.Element} G component
  */
 export const G = ( props ) => createElement( 'g', props );
 
 /**
  * @param {import('react').ComponentPropsWithoutRef<'line'>} props
  *
- * @return {JSX.Element} Path component
+ * @return {import('react').JSX.Element} Path component
  */
 export const Line = ( props ) => createElement( 'line', props );
 
 /**
  * @param {import('react').ComponentPropsWithoutRef<'path'>} props
  *
- * @return {JSX.Element} Path component
+ * @return {import('react').JSX.Element} Path component
  */
 export const Path = ( props ) => createElement( 'path', props );
 
 /**
  * @param {import('react').ComponentPropsWithoutRef<'polygon'>} props
  *
- * @return {JSX.Element} Polygon component
+ * @return {import('react').JSX.Element} Polygon component
  */
 export const Polygon = ( props ) => createElement( 'polygon', props );
 
 /**
  * @param {import('react').ComponentPropsWithoutRef<'rect'>} props
  *
- * @return {JSX.Element} Rect component
+ * @return {import('react').JSX.Element} Rect component
  */
 export const Rect = ( props ) => createElement( 'rect', props );
 
 /**
  * @param {import('react').ComponentPropsWithoutRef<'defs'>} props
  *
- * @return {JSX.Element} Defs component
+ * @return {import('react').JSX.Element} Defs component
  */
 export const Defs = ( props ) => createElement( 'defs', props );
 
 /**
  * @param {import('react').ComponentPropsWithoutRef<'radialGradient'>} props
  *
- * @return {JSX.Element} RadialGradient component
+ * @return {import('react').JSX.Element} RadialGradient component
  */
 export const RadialGradient = ( props ) =>
 	createElement( 'radialGradient', props );
@@ -70,7 +70,7 @@ export const RadialGradient = ( props ) =>
 /**
  * @param {import('react').ComponentPropsWithoutRef<'linearGradient'>} props
  *
- * @return {JSX.Element} LinearGradient component
+ * @return {import('react').JSX.Element} LinearGradient component
  */
 export const LinearGradient = ( props ) =>
 	createElement( 'linearGradient', props );
@@ -78,7 +78,7 @@ export const LinearGradient = ( props ) =>
 /**
  * @param {import('react').ComponentPropsWithoutRef<'stop'>} props
  *
- * @return {JSX.Element} Stop component
+ * @return {import('react').JSX.Element} Stop component
  */
 export const Stop = ( props ) => createElement( 'stop', props );
 
@@ -88,7 +88,7 @@ export const SVG = forwardRef(
 	 *                                                            Other props will be passed through to svg component.
 	 * @param {import('react').ForwardedRef<SVGSVGElement>} ref   The forwarded ref to the SVG element.
 	 *
-	 * @return {JSX.Element} Stop component
+	 * @return {import('react').JSX.Element} Stop component
 	 */
 	( { className, isPressed, ...props }, ref ) => {
 		const appliedProps = {

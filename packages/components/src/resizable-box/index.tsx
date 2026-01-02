@@ -104,7 +104,7 @@ function UnforwardedResizableBox(
 		...props
 	}: ResizableBoxProps,
 	ref: ForwardedRef< Resizable >
-): JSX.Element {
+): React.JSX.Element {
 	return (
 		<Resizable
 			className={ clsx(

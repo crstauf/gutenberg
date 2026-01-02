@@ -26,7 +26,7 @@ import { createElement } from '@wordpress/element';
  * @property {import('highlight-words-core').FindAllArgs['findChunks']}   [findChunks]              Custom `findChunks` function to pass to `highlight-words-core`.
  * @property {string | Record<string, unknown>}                           [highlightClassName='']   Classname to apply to highlighted text or a Record of classnames to apply to given text (which should be the key).
  * @property {import('react').AllHTMLAttributes<HTMLDivElement>['style']} [highlightStyle={}]       Styles to apply to highlighted text.
- * @property {keyof JSX.IntrinsicElements}                                [highlightTag='mark']     Tag to use for the highlighted text.
+ * @property {keyof import('react').JSX.IntrinsicElements}                [highlightTag='mark']     Tag to use for the highlighted text.
  * @property {import('highlight-words-core').FindAllArgs['sanitize']}     [sanitize]                Custom `sanitize` function to pass to `highlight-words-core`.
  * @property {string[]}                                                   [searchWords=[]]          Words to search for and highlight.
  * @property {string}                                                     [unhighlightClassName=''] Classname to apply to unhighlighted text.
@@ -43,7 +43,7 @@ interface Options {
 	findChunks?: FindAllArgs[ 'findChunks' ];
 	highlightClassName?: string | Record< string, unknown >;
 	highlightStyle?: React.AllHTMLAttributes< HTMLDivElement >[ 'style' ];
-	highlightTag?: keyof JSX.IntrinsicElements;
+	highlightTag?: keyof React.JSX.IntrinsicElements;
 	sanitize?: FindAllArgs[ 'sanitize' ];
 	searchWords?: string[];
 	unhighlightClassName?: string;

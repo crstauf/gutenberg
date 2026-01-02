@@ -76,7 +76,7 @@ _Parameters_
 
 _Returns_
 
--   `JSX.Element`: The rendered server-side content.
+-   `import('react').JSX.Element`: The rendered server-side content.
 
 ### useServerSideRender
 

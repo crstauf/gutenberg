@@ -106,7 +106,7 @@ _Parameters_
 
 _Returns_
 
--   `JSX.Element`: The media edit control component.
+-   `import('react').JSX.Element`: The media edit control component.
 
 ### MediaEditProps
 

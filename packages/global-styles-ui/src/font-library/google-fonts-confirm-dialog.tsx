@@ -11,7 +11,7 @@ import {
 	__experimentalSpacer as Spacer,
 } from '@wordpress/components';
 
-function GoogleFontsConfirmDialog(): JSX.Element {
+function GoogleFontsConfirmDialog(): React.JSX.Element {
 	const handleConfirm = (): void => {
 		window.localStorage.setItem(
 			'wp-font-library-google-fonts-permission',

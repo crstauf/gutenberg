@@ -12,7 +12,7 @@ const DuotoneExamples = ( {
 	duotones,
 }: {
 	duotones: Duotone[];
-} ): JSX.Element | null => {
+} ): React.JSX.Element | null => {
 	if ( ! duotones ) {
 		return null;
 	}

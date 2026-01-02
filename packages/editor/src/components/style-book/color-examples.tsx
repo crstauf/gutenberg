@@ -24,7 +24,7 @@ const ColorExamples = ( {
 	type,
 	templateColumns = '1fr 1fr',
 	itemHeight = '52px',
-}: ColorExampleProps ): JSX.Element | null => {
+}: ColorExampleProps ): React.JSX.Element | null => {
 	if ( ! colors ) {
 		return null;
 	}

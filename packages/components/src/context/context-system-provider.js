@@ -92,7 +92,7 @@ function useContextSystemBridge( { value } ) {
  * @param {Object}                    options
  * @param {import('react').ReactNode} options.children Children to render.
  * @param {T}                         options.value    Props to render into connected components.
- * @return {JSX.Element} A Provider wrapped component.
+ * @return {import('react').JSX.Element} A Provider wrapped component.
  */
 const BaseContextSystemProvider = ( { children, value } ) => {
 	const contextValue = useContextSystemBridge( { value } );

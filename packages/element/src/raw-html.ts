@@ -34,7 +34,7 @@ export type RawHTMLProps = {
 export default function RawHTML( {
 	children,
 	...props
-}: RawHTMLProps ): JSX.Element {
+}: RawHTMLProps ): React.JSX.Element {
 	let rawHtml = '';
 
 	// Cast children as an array, and concatenate each element if it is a string.

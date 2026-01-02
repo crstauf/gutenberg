@@ -49,7 +49,7 @@ Alternatively, you can opt-in to only the more granular rulesets offered by the 
 -   `esnext` – rules for ES2015+ environments.
 -   `i18n` – rules for internationalization.
 -   `jsdoc` – rules for JSDoc comments.
--   `jsx-a11y` – rules for accessibility in JSX.
+-   `jsx-a11y` – rules for accessibility in React.JSX.
 -   `react` – rules for React components.
 -   `test-e2e` – rules for end-to-end tests written in Puppeteer.
 -   `test-unit`– rules for unit tests written in Jest.

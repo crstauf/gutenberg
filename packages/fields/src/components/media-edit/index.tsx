@@ -425,7 +425,7 @@ function CompactMediaEditAttachments( {
  * @param {boolean}              [props.hideLabelFromVision] - Whether the label should be hidden from vision.
  * @param {boolean}              [props.isExpanded]          - Whether to render in an expanded form. Default `false`.
  *
- * @return {JSX.Element} The media edit control component.
+ * @return {import('react').JSX.Element} The media edit control component.
  *
  * @example
  * ```tsx

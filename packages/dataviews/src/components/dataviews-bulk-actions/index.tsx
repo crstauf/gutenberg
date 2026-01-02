@@ -320,7 +320,7 @@ function FooterContent< Item >( {
 	const [ actionInProgress, setActionInProgress ] = useState< string | null >(
 		null
 	);
-	const footerContentRef = useRef< JSX.Element | null >( null );
+	const footerContentRef = useRef< React.JSX.Element | null >( null );
 	const isMobile = useViewportMatch( 'medium', '<' );
 
 	const bulkActions = useMemo(
