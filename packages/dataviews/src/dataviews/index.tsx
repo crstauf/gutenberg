@@ -2,11 +2,19 @@
  * External dependencies
  */
 import type { ReactNode, ComponentProps, ReactElement } from 'react';
+import clsx from 'clsx';
 
 /**
  * WordPress dependencies
  */
-import { useEffect, useMemo, useRef, useState } from '@wordpress/element';
+import {
+	useCallback,
+	useContext,
+	useEffect,
+	useMemo,
+	useRef,
+	useState,
+} from '@wordpress/element';
 import { useResizeObserver, throttle } from '@wordpress/compose';
 import { Stack } from '@wordpress/ui';
 
@@ -31,6 +39,7 @@ import DataViewsViewConfig, {
 	ViewTypeMenu,
 } from '../components/dataviews-view-config';
 import normalizeFields from '../field-types';
+import { useInfiniteScrollData } from '../components/dataviews-layouts/utils/useInfiniteScrollData';
 import type { Action, Field, View, SupportedLayouts } from '../types';
 import type { SelectionOrUpdater } from '../types/private';
 type ItemWithId = { id: string };
@@ -47,7 +56,6 @@ type DataViewsProps< Item > = {
 	paginationInfo: {
 		totalItems: number;
 		totalPages: number;
-		infiniteScrollHandler?: () => void;
 	};
 	defaultLayouts: SupportedLayouts;
 	selection?: string[];
@@ -88,13 +96,18 @@ function DefaultUI( {
 	search = true,
 	searchLabel = undefined,
 }: DefaultUIProps ) {
+	const { view } = useContext( DataViewsContext );
+	const isInfiniteScroll = view.infiniteScrollEnabled;
 	return (
 		<>
 			<Stack
 				direction="row"
 				align="top"
 				justify="space-between"
-				className="dataviews__view-actions"
+				className={ clsx( 'dataviews__view-actions', {
+					'dataviews__view-actions--infinite-scroll':
+						isInfiniteScroll,
+				} ) }
 				gap="xs"
 			>
 				<Stack
@@ -141,7 +154,38 @@ function DataViews< Item >( {
 	config = { perPageSizes: [ 10, 20, 50, 100 ] },
 	empty,
 }: DataViewsProps< Item > ) {
-	const { infiniteScrollHandler } = paginationInfo;
+	// Use infinite scroll hook internally when enabled
+	const {
+		data: infiniteScrollData,
+		paginationInfo: infiniteScrollPaginationInfo,
+		isLoadingMore,
+	} = useInfiniteScrollData( {
+		view,
+		setView: onChangeView,
+		data: data as any,
+		getItemId: getItemId as any,
+		totalDataLength: paginationInfo.totalItems,
+	} );
+
+	// Use infinite scroll data and pagination info when enabled, otherwise use the provided ones
+	const displayData = view.infiniteScrollEnabled
+		? ( infiniteScrollData as Item[] )
+		: data;
+	const displayIsLoading = view.infiniteScrollEnabled
+		? isLoadingMore
+		: isLoading;
+	const displayPaginationInfo: {
+		totalItems: number;
+		totalPages: number;
+		infiniteScrollHandler?: ( direction: 'up' | 'down' ) => void;
+		setVisibleEntries?: React.Dispatch< React.SetStateAction< number[] > >;
+	} = view.infiniteScrollEnabled
+		? {
+				...paginationInfo,
+				...infiniteScrollPaginationInfo,
+		  }
+		: paginationInfo;
+	const { infiniteScrollHandler, setVisibleEntries } = displayPaginationInfo;
 	const containerRef = useRef< HTMLDivElement | null >( null );
 	const [ containerWidth, setContainerWidth ] = useState( 0 );
 	const resizeObserverRef = useResizeObserver(
@@ -186,6 +230,47 @@ function DataViews< Item >( {
 		hasPrimaryOrLockedFilters
 	);
 
+	const intersectionObserverCallback:
+		| IntersectionObserverCallback
+		| undefined = useCallback(
+		( entries: IntersectionObserverEntry[] ) => {
+			// Calculate new visible entries outside of setState
+			if ( ! setVisibleEntries ) {
+				return;
+			}
+			setVisibleEntries( ( prev: number[] ) => {
+				const newVisibleEntries = new Set( prev );
+				let hasChanged = false;
+
+				entries.forEach( ( entry ) => {
+					const posInSet = Number(
+						entry.target?.attributes?.getNamedItem(
+							'aria-posinset'
+						)?.value
+					);
+					if ( isNaN( posInSet ) ) {
+						return;
+					}
+					if ( entry.isIntersecting ) {
+						if ( ! newVisibleEntries.has( posInSet ) ) {
+							newVisibleEntries.add( posInSet );
+							hasChanged = true;
+						}
+					} else if ( newVisibleEntries.has( posInSet ) ) {
+						newVisibleEntries.delete( posInSet );
+						hasChanged = true;
+					}
+				} );
+
+				// Only return new array if something actually changed
+				return hasChanged
+					? Array.from( newVisibleEntries ).sort()
+					: prev;
+			} );
+		},
+		[ setVisibleEntries ]
+	);
+
 	useEffect( () => {
 		if ( hasPrimaryOrLockedFilters && ! isShowingFilter ) {
 			setIsShowingFilter( true );
@@ -198,15 +283,34 @@ function DataViews< Item >( {
 			return;
 		}
 
+		let lastScrollTop = 0;
+
 		const handleScroll = throttle( ( event: unknown ) => {
 			const target = ( event as Event ).target as HTMLElement;
 			const scrollTop = target.scrollTop;
 			const scrollHeight = target.scrollHeight;
 			const clientHeight = target.clientHeight;
 
+			// Determine scroll direction
+			const scrollDirection = scrollTop > lastScrollTop ? 'down' : 'up';
+			lastScrollTop = scrollTop;
+
+			// Don't trigger if already loading
+			if ( displayIsLoading ) {
+				return;
+			}
+
 			// Check if user has scrolled near the bottom
-			if ( scrollTop + clientHeight >= scrollHeight - 100 ) {
-				infiniteScrollHandler?.();
+			if (
+				scrollDirection === 'down' &&
+				scrollTop + clientHeight >= scrollHeight - 300
+			) {
+				infiniteScrollHandler?.( 'down' );
+			}
+
+			// Check if user has scrolled near the top
+			if ( scrollDirection === 'up' && scrollTop <= 300 ) {
+				infiniteScrollHandler?.( 'up' );
 			}
 		}, 100 ); // Throttle to 100ms
 
@@ -217,7 +321,11 @@ function DataViews< Item >( {
 			container.removeEventListener( 'scroll', handleScroll );
 			handleScroll.cancel(); // Cancel any pending throttled calls
 		};
-	}, [ infiniteScrollHandler, view.infiniteScrollEnabled ] );
+	}, [
+		displayIsLoading,
+		infiniteScrollHandler,
+		view.infiniteScrollEnabled,
+	] );
 
 	// Filter out DataViewsPicker layouts.
 	const defaultLayouts = useMemo(
@@ -245,9 +353,9 @@ function DataViews< Item >( {
 				onChangeView,
 				fields: _fields,
 				actions,
-				data,
-				isLoading,
-				paginationInfo,
+				data: displayData,
+				isLoading: displayIsLoading,
+				paginationInfo: displayPaginationInfo,
 				selection: _selection,
 				onChangeSelection: setSelectionWithChange,
 				openedFilter,
@@ -267,6 +375,9 @@ function DataViews< Item >( {
 				config,
 				empty,
 				hasInfiniteScrollHandler: !! infiniteScrollHandler,
+				intersectionObserverCallback: view.infiniteScrollEnabled
+					? intersectionObserverCallback
+					: undefined,
 			} }
 		>
 			<div className="dataviews-wrapper" ref={ containerRef }>
