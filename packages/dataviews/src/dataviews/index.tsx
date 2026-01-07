@@ -158,10 +158,8 @@ function DataViews< Item >( {
 	const {
 		data: infiniteScrollData,
 		paginationInfo: infiniteScrollPaginationInfo,
-		isLoadingMore,
 	} = useInfiniteScrollData( {
 		view,
-		setView: onChangeView,
 		data: data as any,
 		getItemId: getItemId as any,
 		totalDataLength: paginationInfo.totalItems,
@@ -171,13 +169,9 @@ function DataViews< Item >( {
 	const displayData = view.infiniteScrollEnabled
 		? ( infiniteScrollData as Item[] )
 		: data;
-	const displayIsLoading = view.infiniteScrollEnabled
-		? isLoadingMore
-		: isLoading;
 	const displayPaginationInfo: {
 		totalItems: number;
 		totalPages: number;
-		infiniteScrollHandler?: ( direction: 'up' | 'down' ) => void;
 		setVisibleEntries?: React.Dispatch< React.SetStateAction< number[] > >;
 	} = view.infiniteScrollEnabled
 		? {
@@ -185,9 +179,10 @@ function DataViews< Item >( {
 				...infiniteScrollPaginationInfo,
 		  }
 		: paginationInfo;
-	const { infiniteScrollHandler, setVisibleEntries } = displayPaginationInfo;
+	const { setVisibleEntries } = displayPaginationInfo;
 	const containerRef = useRef< HTMLDivElement | null >( null );
 	const [ containerWidth, setContainerWidth ] = useState( 0 );
+	const isLoadingRef = useRef( false );
 	const resizeObserverRef = useResizeObserver(
 		( resizeObserverEntries: any ) => {
 			setContainerWidth(
@@ -296,21 +291,55 @@ function DataViews< Item >( {
 			lastScrollTop = scrollTop;
 
 			// Don't trigger if already loading
-			if ( displayIsLoading ) {
+			if ( isLoadingRef.current || isLoading ) {
 				return;
 			}
+
+			const perPage = view.perPage || 10;
+			const currentStartPosition = view.startPosition || 1;
+			const currentEndPosition =
+				view.endPosition || currentStartPosition + perPage - 1;
 
 			// Check if user has scrolled near the bottom
 			if (
 				scrollDirection === 'down' &&
 				scrollTop + clientHeight >= scrollHeight - 300
 			) {
-				infiniteScrollHandler?.( 'down' );
+				// Check if there's more data to load
+				if ( currentEndPosition < paginationInfo.totalItems ) {
+					isLoadingRef.current = true;
+					const newStartPosition = currentEndPosition - 3;
+					const newEndPosition = Math.min(
+						newStartPosition + perPage,
+						paginationInfo.totalItems
+					);
+					onChangeView( {
+						...view,
+						startPosition: newStartPosition,
+						endPosition: newEndPosition,
+					} );
+					isLoadingRef.current = false;
+				}
 			}
 
 			// Check if user has scrolled near the top
-			if ( scrollDirection === 'up' && scrollTop <= 300 ) {
-				infiniteScrollHandler?.( 'up' );
+			if ( scrollDirection === 'up' && scrollTop <= 500 ) {
+				// Check if there's more data to load
+				if ( currentStartPosition > 1 ) {
+					isLoadingRef.current = true;
+					const newEndPosition = currentStartPosition + 1;
+					const newStartPosition = Math.max(
+						newEndPosition - perPage,
+						1
+					);
+
+					onChangeView( {
+						...view,
+						startPosition: newStartPosition,
+						endPosition: newEndPosition,
+					} );
+					isLoadingRef.current = false;
+				}
 			}
 		}, 100 ); // Throttle to 100ms
 
@@ -321,11 +350,7 @@ function DataViews< Item >( {
 			container.removeEventListener( 'scroll', handleScroll );
 			handleScroll.cancel(); // Cancel any pending throttled calls
 		};
-	}, [
-		displayIsLoading,
-		infiniteScrollHandler,
-		view.infiniteScrollEnabled,
-	] );
+	}, [ isLoading, onChangeView, paginationInfo.totalItems, view ] );
 
 	// Filter out DataViewsPicker layouts.
 	const defaultLayouts = useMemo(
@@ -354,7 +379,7 @@ function DataViews< Item >( {
 				fields: _fields,
 				actions,
 				data: displayData,
-				isLoading: displayIsLoading,
+				isLoading,
 				paginationInfo: displayPaginationInfo,
 				selection: _selection,
 				onChangeSelection: setSelectionWithChange,
@@ -374,7 +399,6 @@ function DataViews< Item >( {
 				setIsShowingFilter,
 				config,
 				empty,
-				hasInfiniteScrollHandler: !! infiniteScrollHandler,
 				intersectionObserverCallback: view.infiniteScrollEnabled
 					? intersectionObserverCallback
 					: undefined,
