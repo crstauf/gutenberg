@@ -155,31 +155,17 @@ function DataViews< Item >( {
 	empty,
 }: DataViewsProps< Item > ) {
 	// Use infinite scroll hook internally when enabled
-	const {
-		data: infiniteScrollData,
-		paginationInfo: infiniteScrollPaginationInfo,
-	} = useInfiniteScrollData( {
-		view,
-		data: data as any,
-		getItemId: getItemId as any,
-		totalDataLength: paginationInfo.totalItems,
-	} );
+	const { data: infiniteScrollData, setVisibleEntries } =
+		useInfiniteScrollData( {
+			view,
+			data: data as any,
+			getItemId: getItemId as any,
+		} );
 
 	// Use infinite scroll data and pagination info when enabled, otherwise use the provided ones
 	const displayData = view.infiniteScrollEnabled
 		? ( infiniteScrollData as Item[] )
 		: data;
-	const displayPaginationInfo: {
-		totalItems: number;
-		totalPages: number;
-		setVisibleEntries?: React.Dispatch< React.SetStateAction< number[] > >;
-	} = view.infiniteScrollEnabled
-		? {
-				...paginationInfo,
-				...infiniteScrollPaginationInfo,
-		  }
-		: paginationInfo;
-	const { setVisibleEntries } = displayPaginationInfo;
 	const containerRef = useRef< HTMLDivElement | null >( null );
 	const [ containerWidth, setContainerWidth ] = useState( 0 );
 	const isLoadingRef = useRef( false );
@@ -380,7 +366,7 @@ function DataViews< Item >( {
 				actions,
 				data: displayData,
 				isLoading,
-				paginationInfo: displayPaginationInfo,
+				paginationInfo,
 				selection: _selection,
 				onChangeSelection: setSelectionWithChange,
 				openedFilter,
