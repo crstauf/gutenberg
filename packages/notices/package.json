@@ -43,8 +43,8 @@
 	"wpScript": true,
 	"types": "build-types",
 	"dependencies": {
-		"@wordpress/a11y": "file:../a11y",
-		"@wordpress/data": "file:../data"
+		"@wordpress/a11y": "workspace:*",
+		"@wordpress/data": "workspace:*"
 	},
 	"devDependencies": {
 		"deep-freeze": "0.0.1"
