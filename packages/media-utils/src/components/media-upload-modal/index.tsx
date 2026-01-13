@@ -1,8 +1,8 @@
 /**
  * WordPress dependencies
  */
-import { useState, useCallback, useMemo } from '@wordpress/element';
 import { __, sprintf, _n } from '@wordpress/i18n';
+import { useState, useCallback, useMemo, useRef } from '@wordpress/element';
 import {
 	privateApis as coreDataPrivateApis,
 	store as coreStore,
@@ -462,13 +462,16 @@ export function MediaUploadModal( {
 		]
 	);
 
-	const paginationInfo = useMemo(
-		() => ( {
-			totalItems,
-			totalPages,
-		} ),
-		[ totalItems, totalPages ]
-	);
+	const prevPaginationInfoRef = useRef( { totalItems: 0, totalPages: 0 } );
+
+	const paginationInfo = useMemo( () => {
+		// Only update when we have valid values (not both 0)
+		// to avoid showing 0 values during data fetching
+		if ( totalItems > 0 || totalPages > 0 ) {
+			prevPaginationInfoRef.current = { totalItems, totalPages };
+		}
+		return prevPaginationInfoRef.current;
+	}, [ totalItems, totalPages ] );
 
 	const defaultLayouts = useMemo(
 		() => ( {
