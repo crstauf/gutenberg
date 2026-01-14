@@ -24,6 +24,13 @@ add_filter(
 /**
  * Callback function for the render_block filter.
  *
+ * The Block Bindings system is able to replace an attribute value with the value provided
+ * by a bindings source both for explicit and sourced attributes. However, if an attribute
+ * is explicit and also duplicated in the persisted block markup, Block Bindings cannot
+ * currently replace the latter. This function takes care of replacing the img src in
+ * the cover block markup with the value of the url attribute, which may have been
+ * replaced by Block Bindings.
+ *
  * @since 7.0.0
  *
  * @param string   $block_content The block content.
