@@ -40,7 +40,7 @@ function gutenberg_block_bindings_replace_cover_block_img_src( $block_content, $
 	$amended_content = new WP_HTML_Tag_Processor( $block_content );
 	if ( ! $amended_content->next_tag(
 		array(
-			'tag_name' => 'img'
+			'tag_name' => 'img',
 		)
 	) ) {
 		return $block_content;
