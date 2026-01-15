@@ -9,12 +9,10 @@
 
 // The following filter can be removed once the minimum required WordPress version is 7.0 or newer.
 add_filter(
-	'block_bindings_supported_attributes',
+	'block_bindings_supported_attributes_core/cover',
 	function ( $attributes, $block_type ) {
-		if ( 'core/cover' === $block_type ) {
-			$attributes[] = 'id';
-			$attributes[] = 'url';
-		}
+		$attributes[] = 'id';
+		$attributes[] = 'url';
 		return $attributes;
 	},
 	10,
