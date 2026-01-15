@@ -29,13 +29,13 @@ function gutenberg_replace_cover_block_img_src( $attribute, $attribute_name, $bl
 	}
 	return $attribute;
 }
-add_filter( "block_bindings_attribute_replaced_in_markup", 'gutenberg_replace_cover_block_img_src', 10, 3 );
+add_filter( 'block_bindings_attribute_replaced_in_markup', 'gutenberg_replace_cover_block_img_src', 10, 3 );
 
 // Remove WP 6.9 Block Bindings compat layer.
 remove_filter( 'render_block', 'gutenberg_block_bindings_render_block', 10 );
 /**
  * Callback function for the render_block filter.
- * 
+ *
  * Identical to the 6.9 compat layer version, with one addition:
  * The `block_bindings_attribute_replaced_in_markup` allows specifying attributes that should be
  * replaced in the block markup.
@@ -93,8 +93,8 @@ function gutenberg_block_bindings_render_block_7_0( $block_content, $block, $ins
 
 	if ( ! empty( $computed_attributes ) && ! empty( $block_content ) ) {
 		foreach ( $computed_attributes as $attribute_name => $source_value ) {
-			$attribute = $block_type->attributes[ $attribute_name ];
-			$attribute = apply_filters( "block_bindings_attribute_replaced_in_markup", $attribute, $attribute_name, $instance->name );
+			$attribute                                 = $block_type->attributes[ $attribute_name ];
+			$attribute                                 = apply_filters( 'block_bindings_attribute_replaced_in_markup', $attribute, $attribute_name, $instance->name );
 			$block_type->attributes[ $attribute_name ] = $attribute;
 
 			$block_content = gutenberg_replace_html( $block_content, $attribute_name, $source_value, $block_type );
