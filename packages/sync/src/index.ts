@@ -17,6 +17,8 @@ export * as Y from 'yjs';
 export { default as Delta } from './quill-delta/Delta';
 
 export { AwarenessState } from './awareness/awareness-state';
+export type { EnhancedState } from './awareness/awareness-types';
+
 export {
 	CRDT_DOC_META_PERSISTENCE_KEY,
 	CRDT_RECORD_MAP_KEY,
@@ -27,10 +29,7 @@ export {
 	LOCAL_SYNC_MANAGER_ORIGIN,
 	WORDPRESS_META_KEY_FOR_CRDT_DOC_PERSISTENCE,
 } from './config';
+
 export { createSyncManager } from './manager';
 
-/**
- * An enhanced state includes additional metadata about the user's connection.
- */
-export type { EnhancedState } from './awareness/awareness-types';
 export type * from './types';
