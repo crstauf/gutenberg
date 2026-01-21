@@ -130,6 +130,7 @@ export function createHttpPollingProvider(): ProviderCreator {
 
 		return {
 			destroy: () => provider.destroy(),
+			on: provider.on.bind( provider ),
 		};
 	};
 }
