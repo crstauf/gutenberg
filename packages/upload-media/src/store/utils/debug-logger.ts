@@ -623,6 +623,53 @@ export function logInfo(
 }
 
 /**
+ * Log when a retry is scheduled for a failed item.
+ */
+export function logRetryScheduled(
+	itemId: string,
+	fileName: string,
+	retryCount: number,
+	delayMs: number
+): void {
+	log(
+		`Retry scheduled for ${ fileName } (attempt ${ retryCount }) in ${ delayMs }ms`,
+		{
+			category: 'queue',
+			data: { itemId, retryCount, delayMs },
+		}
+	);
+}
+
+/**
+ * Log when a retry attempt is being executed.
+ */
+export function logRetryExecuting(
+	itemId: string,
+	fileName: string,
+	retryCount: number
+): void {
+	log( `Executing retry for ${ fileName } (attempt ${ retryCount })`, {
+		category: 'queue',
+		data: { itemId, retryCount },
+	} );
+}
+
+/**
+ * Log when maximum retries have been exceeded.
+ */
+export function logMaxRetriesExceeded(
+	itemId: string,
+	fileName: string,
+	maxRetries: number,
+	error: Error
+): void {
+	log( `Max retries exceeded for ${ fileName }`, {
+		category: 'error',
+		data: { itemId, maxRetries, error: error.message },
+	} );
+}
+
+/**
  * Create a timing helper to measure operation duration.
  */
 export function createTimer(): { stop: () => number } {

@@ -26,6 +26,10 @@ export interface QueueItem {
 	sourceAttachmentId?: number;
 	abortController?: AbortController;
 	parentId?: QueueItemId;
+	/** Timestamp (ms since epoch) when the next retry attempt will be made. */
+	nextRetryTimestamp?: number;
+	/** The operation that failed and needs to be retried. */
+	failedOperation?: Operation;
 }
 
 export interface State {
@@ -42,6 +46,7 @@ export enum Type {
 	Cancel = 'CANCEL_ITEM',
 	Remove = 'REMOVE_ITEM',
 	RetryItem = 'RETRY_ITEM',
+	ScheduleRetry = 'SCHEDULE_RETRY',
 	PauseItem = 'PAUSE_ITEM',
 	ResumeItem = 'RESUME_ITEM',
 	PauseQueue = 'PAUSE_QUEUE',
@@ -87,6 +92,15 @@ export type CancelAction = Action<
 	{ id: QueueItemId; error: Error }
 >;
 export type RetryItemAction = Action< Type.RetryItem, { id: QueueItemId } >;
+export type ScheduleRetryAction = Action<
+	Type.ScheduleRetry,
+	{
+		id: QueueItemId;
+		error: Error;
+		retryCount: number;
+		nextRetryTimestamp: number;
+	}
+>;
 export type PauseItemAction = Action< Type.PauseItem, { id: QueueItemId } >;
 export type ResumeItemAction = Action< Type.ResumeItem, { id: QueueItemId } >;
 export type PauseQueueAction = Action< Type.PauseQueue >;
@@ -151,6 +165,22 @@ export interface SideloadMediaArgs {
 	signal?: AbortSignal;
 }
 
+/**
+ * Configuration for automatic retry behavior on upload failures.
+ */
+export interface RetrySettings {
+	/** Maximum number of retry attempts before giving up. */
+	maxRetryAttempts: number;
+	/** Initial delay in milliseconds before the first retry. */
+	initialRetryDelayMs: number;
+	/** Maximum delay in milliseconds between retries. */
+	maxRetryDelayMs: number;
+	/** Multiplier for exponential backoff (e.g., 2 means double delay each retry). */
+	backoffMultiplier: number;
+	/** Jitter factor (0-1) to add randomness to retry delays. */
+	retryJitter: number;
+}
+
 export interface Settings {
 	// Registered image sizes from the server.
 	allImageSizes?: Record<
@@ -202,6 +232,8 @@ export interface Settings {
 	 * Controlled by WordPress image_save_progressive filter.
 	 */
 	gifInterlaced?: boolean;
+	// Retry settings for automatic retry on failure.
+	retry?: RetrySettings;
 }
 
 // Must match the Attachment type from the media-utils package.
@@ -246,6 +278,7 @@ export enum ItemStatus {
 	Queued = 'QUEUED',
 	Processing = 'PROCESSING',
 	Paused = 'PAUSED',
+	PendingRetry = 'PENDING_RETRY',
 	Uploaded = 'UPLOADED',
 	Error = 'ERROR',
 }
