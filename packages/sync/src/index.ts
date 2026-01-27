@@ -17,6 +17,10 @@ export * as Y from 'yjs';
 export { default as Delta } from './quill-delta/Delta';
 
 export { AwarenessState } from './awareness/awareness-state';
+
+/**
+ * An enhanced state includes additional metadata about the user's connection.
+ */
 export type { EnhancedState } from './awareness/awareness-types';
 
 export {

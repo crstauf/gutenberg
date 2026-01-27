@@ -2,9 +2,9 @@
  * WordPress dependencies
  */
 import { dispatch, select, subscribe } from '@wordpress/data';
-import { Y } from '@wordpress/sync';
 // @ts-ignore No exported types for block editor store selectors.
 import { store as blockEditorStore } from '@wordpress/block-editor';
+import { Y } from '@wordpress/sync';
 
 /**
  * Internal dependencies
@@ -34,6 +34,8 @@ export class PostEditorAwareness extends BaseAwarenessState< PostEditorState > {
 		...baseEqualityFieldChecks,
 		editorState: this.areEditorStatesEqual,
 	};
+
+	private hasSetup = false;
 
 	public constructor(
 		doc: Y.Doc,
