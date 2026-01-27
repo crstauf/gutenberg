@@ -97,7 +97,7 @@ HTML
 				,
 				'<div class="wp-block-button"><a class="wp-block-button__link wp-element-button">test-source-value</a></div>',
 			),
-			'cover block (with bound non-sourced attribute)'     => array(
+			'cover block (with bound non-sourced attribute)' => array(
 				'url',
 				<<<HTML
 <!-- wp:cover -->
