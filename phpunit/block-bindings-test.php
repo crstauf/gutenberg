@@ -97,6 +97,16 @@ HTML
 				,
 				'<div class="wp-block-button"><a class="wp-block-button__link wp-element-button">test-source-value</a></div>',
 			),
+			'cover block (with bound non-sourced attribute)'     => array(
+				'url',
+				<<<HTML
+<!-- wp:cover -->
+<div class="wp-block-cover is-layout-flow wp-block-cover-is-layout-flow"><img class="wp-block-cover__image-background" src="this-should-not-appear.jpg"/><span></span><div class="wp-block-cover__inner-container"></div></div>
+<!-- /wp:cover -->
+HTML
+				,
+				'<div class="wp-block-cover is-layout-flow wp-block-cover-is-layout-flow"><img class="wp-block-cover__image-background" src="http://test-source-value"/><span></span><div class="wp-block-cover__inner-container"></div></div>',
+			),
 			'test block'      => array(
 				'myAttribute',
 				<<<HTML
