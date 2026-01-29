@@ -46,6 +46,125 @@
 		margin-top: 10px;
 	}
 
+	.wp-block-playlist__waveform-player,
+	.waveform-player {
+		width: 100%;
+		margin-top: 10px;
+		min-height: 60px;
+
+		// Style the audio element inside WaveformPlayer.
+		audio {
+			margin-top: 0;
+		}
+	}
+
+	// WaveformPlayer component styles - duplicated here to ensure they apply
+	// in the editor iframe where the JS-imported CSS doesn't load.
+	.waveform-player {
+		font-family: inherit;
+		color: inherit;
+		line-height: 1.4;
+	}
+
+	.waveform-track {
+		display: flex;
+		align-items: center;
+		gap: 12px;
+		position: relative;
+	}
+
+	.waveform-btn {
+		width: 36px;
+		height: 36px;
+		min-width: 36px;
+		border-radius: 0;
+		border: none;
+		background: var(--waveform-progress-color, #1e8cbe);
+		color: #fff;
+		cursor: pointer;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		transition: all 0.2s ease;
+		padding: 0;
+		opacity: 0.9;
+		flex-shrink: 0;
+
+		&:hover:not(:disabled) {
+			opacity: 1;
+			transform: scale(1.05);
+		}
+
+		&:disabled {
+			cursor: not-allowed;
+			opacity: 0.3;
+		}
+
+		> * {
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			width: 100%;
+			height: 100%;
+		}
+
+		svg {
+			width: 16px;
+			height: 16px;
+			fill: currentColor;
+			display: block;
+		}
+	}
+
+	.waveform-icon-play svg {
+		margin-left: 1px;
+	}
+
+	.waveform-container {
+		flex: 1;
+		position: relative;
+		min-height: 60px;
+		cursor: pointer;
+		min-width: 0;
+		width: 100%;
+
+		canvas {
+			display: block;
+			width: 100%;
+			height: 100%;
+			max-width: 100%;
+		}
+	}
+
+	.waveform-info {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+		font-size: 13px;
+		min-height: 20px;
+	}
+
+	.waveform-text {
+		flex: 1;
+		display: flex;
+		flex-direction: column;
+		gap: 2px;
+		min-width: 0;
+	}
+
+	.waveform-title {
+		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		font-weight: 500;
+	}
+
+	.waveform-time {
+		font-size: 11px;
+		white-space: nowrap;
+		flex-shrink: 0;
+	}
+
 	.wp-block-playlist__tracklist {
 		font-size: 14px;
 

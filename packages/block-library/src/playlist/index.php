@@ -112,6 +112,8 @@ function render_block_core_playlist( $attributes, $content, $block ) {
 		/>';
 	}
 
+	$visualization_style = isset( $attributes['visualizationStyle'] ) ? $attributes['visualizationStyle'] : 'bars';
+
 	$html .= '
 		<div>
 			<span class="wp-block-playlist__item-title" data-wp-text="state.currentTrack.title"></span>
@@ -121,15 +123,17 @@ function render_block_core_playlist( $attributes, $content, $block ) {
 			</div>
 		</div>
 	</div>
-		<audio
-			controls="controls"
-			data-wp-on--ended="actions.nextSong"
-			data-wp-on--play="actions.isPlaying"
-			data-wp-on--pause="actions.isPaused"
-			data-wp-bind--src="state.currentTrack.url"
+		<div
+			class="wp-block-playlist__waveform-player"
+			data-waveform-player
+			data-waveform-style="' . esc_attr( $visualization_style ) . '"
+			data-wp-bind--data-url="state.currentTrack.url"
 			data-wp-bind--aria-label="state.currentTrack.ariaLabel"
-			data-wp-watch="callbacks.autoPlay"
-		></audio>
+			data-wp-watch="callbacks.initWaveformPlayer"
+			data-wp-on-document--waveform-ended="actions.nextSong"
+			data-wp-on-document--waveform-play="actions.isPlaying"
+			data-wp-on-document--waveform-pause="actions.isPaused"
+		></div>
 	';
 
 	// Add the HTML for the current track inside the figure.

@@ -3,11 +3,13 @@
  */
 import clsx from 'clsx';
 import { v4 as uuid } from 'uuid';
+import WaveformPlayer from '@arraypress/waveform-player';
+import '@arraypress/waveform-player/dist/waveform-player.css';
 
 /**
  * WordPress dependencies
  */
-import { useState, useCallback, useEffect } from '@wordpress/element';
+import { useState, useCallback, useEffect, useRef } from '@wordpress/element';
 import {
 	store as blockEditorStore,
 	MediaPlaceholder,
@@ -42,7 +44,15 @@ import { useToolsPanelDropdownMenuProps } from '../utils/hooks';
 
 const ALLOWED_MEDIA_TYPES = [ 'audio' ];
 
-const CurrentTrack = ( { track, showImages, onTrackEnd } ) => {
+const CurrentTrack = ( {
+	track,
+	showImages,
+	onTrackEnd,
+	visualizationStyle,
+} ) => {
+	const waveformRef = useRef( null );
+	const waveformInstanceRef = useRef( null );
+
 	/**
 	 * dangerouslySetInnerHTML and safeHTML are used because
 	 * the media library allows using some HTML tags in the title, artist, and album fields.
@@ -87,6 +97,54 @@ const CurrentTrack = ( { track, showImages, onTrackEnd } ) => {
 		ariaLabel = stripHTML( __( 'Untitled' ) );
 	}
 
+	// Initialize WaveformPlayer when track changes.
+	useEffect( () => {
+		const currentElement = waveformRef.current;
+		if ( ! currentElement || ! track?.src ) {
+			return;
+		}
+
+		// Set the data attributes before creating the player.
+		currentElement.setAttribute( 'data-url', track.src );
+		currentElement.setAttribute(
+			'data-waveform-style',
+			visualizationStyle || 'bars'
+		);
+
+		// Destroy existing instance if any.
+		if ( waveformInstanceRef.current?.destroy ) {
+			try {
+				waveformInstanceRef.current.destroy();
+			} catch ( e ) {
+				// Ignore errors during cleanup.
+			}
+		}
+
+		// Create new WaveformPlayer instance.
+		const instance = new WaveformPlayer( currentElement );
+		waveformInstanceRef.current = instance;
+
+		// Get the audio element created by WaveformPlayer.
+		const audio = currentElement.querySelector( 'audio' );
+		if ( audio ) {
+			audio.addEventListener( 'ended', onTrackEnd );
+		}
+
+		return () => {
+			if ( audio ) {
+				audio.removeEventListener( 'ended', onTrackEnd );
+			}
+			if ( waveformInstanceRef.current?.destroy ) {
+				try {
+					waveformInstanceRef.current.destroy();
+				} catch ( e ) {
+					// Ignore errors during cleanup.
+				}
+			}
+			waveformInstanceRef.current = null;
+		};
+	}, [ track?.src, track?.uniqueId, visualizationStyle, onTrackEnd ] );
+
 	return (
 		<>
 			<div className="wp-block-playlist__current-item">
@@ -122,12 +180,13 @@ const CurrentTrack = ( { track, showImages, onTrackEnd } ) => {
 					</div>
 				</div>
 			</div>
-			<audio
-				controls="controls"
-				src={ track?.url ? track.url : '' }
-				onEnded={ onTrackEnd }
+			<div
+				ref={ waveformRef }
+				className="wp-block-playlist__waveform-player"
+				data-waveform-player
+				data-waveform-style={ visualizationStyle || 'bars' }
+				data-url={ track?.src || '' }
 				aria-label={ ariaLabel }
-				tabIndex={ 0 }
 			/>
 		</>
 	);
@@ -147,6 +206,7 @@ const PlaylistEdit = ( {
 		showImages,
 		showArtists,
 		currentTrack,
+		visualizationStyle,
 		tagName: TagName = showNumbers ? 'ol' : 'ul',
 	} = attributes;
 	const [ trackListIndex, setTrackListIndex ] = useState( 0 );
@@ -500,9 +560,11 @@ const PlaylistEdit = ( {
 			<figure { ...blockProps }>
 				<Disabled isDisabled={ ! isSelected }>
 					<CurrentTrack
+						key={ `${ tracks[ trackListIndex ]?.uniqueId }-${ visualizationStyle }` }
 						track={ tracks[ trackListIndex ] }
 						showImages={ showImages }
 						onTrackEnd={ onTrackEnd }
+						visualizationStyle={ visualizationStyle }
 					/>
 				</Disabled>
 				{ showTracklist && (
