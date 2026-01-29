@@ -110,6 +110,9 @@ const CurrentTrack = ( {
 			'data-waveform-style',
 			visualizationStyle || 'bars'
 		);
+		currentElement.setAttribute( 'data-waveform-color', 'currentColor' );
+		currentElement.setAttribute( 'data-progress-color', 'currentColor' );
+		currentElement.setAttribute( 'data-button-color', 'currentColor' );
 
 		// Destroy existing instance if any.
 		if ( waveformInstanceRef.current?.destroy ) {
@@ -123,6 +126,16 @@ const CurrentTrack = ( {
 		// Create new WaveformPlayer instance.
 		const instance = new WaveformPlayer( currentElement );
 		waveformInstanceRef.current = instance;
+
+		// Get the background color from the block container and apply it to the SVG icons.
+		const blockContainer = currentElement.closest( '.wp-block-playlist' );
+		const bgColor = blockContainer
+			? window.getComputedStyle( blockContainer ).backgroundColor
+			: window.getComputedStyle( currentElement ).backgroundColor;
+		const svgPaths = currentElement.querySelectorAll( 'svg path' );
+		svgPaths.forEach( ( path ) => {
+			path.style.fill = bgColor;
+		} );
 
 		// Get the audio element created by WaveformPlayer.
 		const audio = currentElement.querySelector( 'audio' );
@@ -186,6 +199,9 @@ const CurrentTrack = ( {
 				data-waveform-player
 				data-waveform-style={ visualizationStyle || 'bars' }
 				data-url={ track?.src || '' }
+				data-waveform-color="currentColor"
+				data-progress-color="currentColor"
+				data-button-color="currentColor"
 				aria-label={ ariaLabel }
 			/>
 		</>

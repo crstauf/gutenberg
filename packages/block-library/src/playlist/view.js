@@ -94,6 +94,9 @@ const { state } = store(
 
 				// Set the url attribute for WaveformPlayer.
 				ref.setAttribute( 'data-url', track.url );
+				ref.setAttribute( 'data-waveform-color', 'currentColor' );
+				ref.setAttribute( 'data-progress-color', 'currentColor' );
+				ref.setAttribute( 'data-button-color', 'currentColor' );
 
 				// Destroy existing instance if any.
 				const existingInstance = waveformInstances.get( ref );
@@ -108,6 +111,16 @@ const { state } = store(
 				// Create new WaveformPlayer instance.
 				const instance = new WaveformPlayer( ref );
 				waveformInstances.set( ref, instance );
+
+				// Get the background color from the block container and apply it to the SVG icons.
+				const blockContainer = ref.closest( '.wp-block-playlist' );
+				const bgColor = blockContainer
+					? window.getComputedStyle( blockContainer ).backgroundColor
+					: window.getComputedStyle( ref ).backgroundColor;
+				const svgPaths = ref.querySelectorAll( 'svg path' );
+				svgPaths.forEach( ( path ) => {
+					path.style.fill = bgColor;
+				} );
 
 				// Get the audio element created by WaveformPlayer.
 				const audio = ref.querySelector( 'audio' );
