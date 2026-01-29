@@ -92,14 +92,50 @@ const { state } = store(
 					return;
 				}
 
+				// Skip reinitialization if instance already exists for the same track.
+				const existingInstance = waveformInstances.get( ref );
+				const currentUrl = ref.getAttribute( 'data-url' );
+				if ( existingInstance && currentUrl === track.url ) {
+					return;
+				}
+
 				// Set the url attribute for WaveformPlayer.
 				ref.setAttribute( 'data-url', track.url );
-				ref.setAttribute( 'data-waveform-color', 'currentColor' );
-				ref.setAttribute( 'data-progress-color', 'currentColor' );
-				ref.setAttribute( 'data-button-color', 'currentColor' );
+				// Get the text color for styling
+				const textColor = window.getComputedStyle( ref ).color;
+				// Get the background color from the block container, falling back to body if empty/transparent.
+				const blockContainer = ref.closest( '.wp-block-playlist' );
+				let bgColor = blockContainer
+					? window.getComputedStyle( blockContainer ).backgroundColor
+					: window.getComputedStyle( ref ).backgroundColor;
+				// Check if background is transparent/empty and fall back to body background.
+				const isTransparent =
+					! bgColor ||
+					bgColor === 'transparent' ||
+					bgColor === 'rgba(0, 0, 0, 0)' ||
+					bgColor.match( /rgba\([^)]+,\s*0\s*\)/ );
+				if ( isTransparent ) {
+					bgColor = window.getComputedStyle(
+						document.body
+					).backgroundColor;
+				}
+				// Convert rgb to rgba with 50% opacity for unplayed bars
+				const waveformColor = textColor.startsWith( 'rgba' )
+					? textColor.replace( /[\d.]+\)$/, '0.5)' )
+					: textColor
+							.replace( 'rgb(', 'rgba(' )
+							.replace( ')', ', 0.5)' );
+				// Convert bgColor to rgba with 50% opacity for played bars
+				const progressColor = bgColor.startsWith( 'rgba' )
+					? bgColor.replace( /[\d.]+\)$/, '0.5)' )
+					: bgColor
+							.replace( 'rgb(', 'rgba(' )
+							.replace( ')', ', 0.5)' );
+				ref.setAttribute( 'data-waveform-color', waveformColor );
+				ref.setAttribute( 'data-progress-color', progressColor );
+				ref.setAttribute( 'data-button-color', textColor );
 
-				// Destroy existing instance if any.
-				const existingInstance = waveformInstances.get( ref );
+				// Destroy existing instance if switching tracks.
 				if ( existingInstance?.destroy ) {
 					try {
 						existingInstance.destroy();
@@ -112,51 +148,140 @@ const { state } = store(
 				const instance = new WaveformPlayer( ref );
 				waveformInstances.set( ref, instance );
 
-				// Get the background color from the block container and apply it to the SVG icons.
-				const blockContainer = ref.closest( '.wp-block-playlist' );
-				const bgColor = blockContainer
-					? window.getComputedStyle( blockContainer ).backgroundColor
-					: window.getComputedStyle( ref ).backgroundColor;
+				// Apply background color to SVG icons for contrast.
 				const svgPaths = ref.querySelectorAll( 'svg path' );
 				svgPaths.forEach( ( path ) => {
 					path.style.fill = bgColor;
 				} );
 
-				// Get the audio element created by WaveformPlayer.
-				const audio = ref.querySelector( 'audio' );
-				if ( audio ) {
-					// Set up event listeners.
-					audio.addEventListener( 'ended', () => {
-						ref.dispatchEvent(
-							new CustomEvent( 'waveform-ended', {
-								bubbles: true,
-								detail: { element: ref },
-							} )
-						);
-					} );
-
-					audio.addEventListener( 'play', () => {
-						ref.dispatchEvent(
-							new CustomEvent( 'waveform-play', {
-								bubbles: true,
-								detail: { element: ref },
-							} )
-						);
-					} );
-
-					audio.addEventListener( 'pause', () => {
-						ref.dispatchEvent(
-							new CustomEvent( 'waveform-pause', {
-								bubbles: true,
-								detail: { element: ref },
-							} )
-						);
-					} );
-
-					// Auto-play if the context says we should be playing.
-					if ( context.isPlaying ) {
-						audio.play();
+				// Create progress background overlay element.
+				const waveformContainer = ref.querySelector(
+					'.waveform-container'
+				);
+				if ( waveformContainer ) {
+					// Remove any existing progress background.
+					const existingProgressBg = waveformContainer.querySelector(
+						'.wp-block-playlist__progress-bg'
+					);
+					if ( existingProgressBg ) {
+						existingProgressBg.remove();
 					}
+
+					// Create the progress background element.
+					// Use text color as background for played area.
+					const progressBg = document.createElement( 'div' );
+					progressBg.className = 'wp-block-playlist__progress-bg';
+					progressBg.style.cssText = `
+						position: absolute;
+						top: 0;
+						left: 0;
+						height: 60px;
+						width: 0%;
+						background-color: ${ textColor };
+						pointer-events: none;
+						z-index: 0;
+					`;
+					waveformContainer.style.position = 'relative';
+					waveformContainer.insertBefore(
+						progressBg,
+						waveformContainer.firstChild
+					);
+
+					// Store reference for updating.
+					ref._progressBg = progressBg;
+
+					// Create hover overlay for showing potential seek position.
+					const hoverBg = document.createElement( 'div' );
+					hoverBg.className = 'wp-block-playlist__hover-bg';
+					hoverBg.style.cssText = `
+						position: absolute;
+						top: 0;
+						left: 0;
+						height: 60px;
+						width: 0%;
+						background-color: ${ waveformColor };
+						pointer-events: none;
+						z-index: 0;
+						opacity: 0;
+						transition: opacity 0.15s ease;
+					`;
+					waveformContainer.insertBefore(
+						hoverBg,
+						waveformContainer.firstChild
+					);
+					ref._hoverBg = hoverBg;
+
+					// Handle hover events on waveform container.
+					waveformContainer.addEventListener( 'mouseenter', () => {
+						hoverBg.style.opacity = '1';
+					} );
+					waveformContainer.addEventListener( 'mouseleave', () => {
+						hoverBg.style.opacity = '0';
+					} );
+					waveformContainer.addEventListener(
+						'mousemove',
+						( event ) => {
+							const rect =
+								waveformContainer.getBoundingClientRect();
+							const hoverProgress =
+								( ( event.clientX - rect.left ) / rect.width ) *
+								100;
+							hoverBg.style.width = `${ Math.max(
+								0,
+								Math.min( 100, hoverProgress )
+							) }%`;
+						}
+					);
+				}
+
+				// Listen to WaveformPlayer custom events for progress updates.
+				ref.addEventListener(
+					'waveformplayer:timeupdate',
+					( event ) => {
+						if ( ref._progressBg && event.detail?.duration ) {
+							const progress =
+								( event.detail.currentTime /
+									event.detail.duration ) *
+								100;
+							ref._progressBg.style.width = `${ progress }%`;
+						}
+					}
+				);
+
+				ref.addEventListener( 'waveformplayer:ended', () => {
+					ref.dispatchEvent(
+						new CustomEvent( 'waveform-ended', {
+							bubbles: true,
+							detail: { element: ref },
+						} )
+					);
+					// Reset progress background.
+					if ( ref._progressBg ) {
+						ref._progressBg.style.width = '0%';
+					}
+				} );
+
+				ref.addEventListener( 'waveformplayer:play', () => {
+					ref.dispatchEvent(
+						new CustomEvent( 'waveform-play', {
+							bubbles: true,
+							detail: { element: ref },
+						} )
+					);
+				} );
+
+				ref.addEventListener( 'waveformplayer:pause', () => {
+					ref.dispatchEvent(
+						new CustomEvent( 'waveform-pause', {
+							bubbles: true,
+							detail: { element: ref },
+						} )
+					);
+				} );
+
+				// Auto-play if the context says we should be playing.
+				if ( context.isPlaying && instance ) {
+					instance.play();
 				}
 			},
 		},

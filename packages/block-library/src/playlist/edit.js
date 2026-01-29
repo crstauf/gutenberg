@@ -110,9 +110,22 @@ const CurrentTrack = ( {
 			'data-waveform-style',
 			visualizationStyle || 'bars'
 		);
-		currentElement.setAttribute( 'data-waveform-color', 'currentColor' );
-		currentElement.setAttribute( 'data-progress-color', 'currentColor' );
-		currentElement.setAttribute( 'data-button-color', 'currentColor' );
+		// Get the text color for styling
+		const textColor = window.getComputedStyle( currentElement ).color;
+		// Convert rgb to rgba with different opacities
+		const waveformColor = textColor.startsWith( 'rgba' )
+			? textColor.replace( /[\d.]+\)$/, '0.3)' )
+			: textColor.replace( 'rgb(', 'rgba(' ).replace( ')', ', 0.3)' );
+		const progressBgColor = textColor.startsWith( 'rgba' )
+			? textColor.replace( /[\d.]+\)$/, '0.1)' )
+			: textColor.replace( 'rgb(', 'rgba(' ).replace( ')', ', 0.1)' );
+		currentElement.setAttribute( 'data-waveform-color', waveformColor );
+		currentElement.setAttribute( 'data-progress-color', textColor );
+		currentElement.setAttribute(
+			'data-progress-background-color',
+			progressBgColor
+		);
+		currentElement.setAttribute( 'data-button-color', textColor );
 
 		// Destroy existing instance if any.
 		if ( waveformInstanceRef.current?.destroy ) {
@@ -199,9 +212,6 @@ const CurrentTrack = ( {
 				data-waveform-player
 				data-waveform-style={ visualizationStyle || 'bars' }
 				data-url={ track?.src || '' }
-				data-waveform-color="currentColor"
-				data-progress-color="currentColor"
-				data-button-color="currentColor"
 				aria-label={ ariaLabel }
 			/>
 		</>
