@@ -42,7 +42,7 @@ export interface ObjectMeta extends Record< string, unknown > {
  * Add new event types here as needed.
  */
 export interface ProviderEventMap {
-	status: SyncConnectionState;
+	'sync-connection-status': SyncConnectionState;
 }
 
 /**
