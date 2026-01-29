@@ -218,6 +218,11 @@ export function cancelItem( id: QueueItemId, error: Error, silent = false ) {
 
 		logCancel( id, item.file.name, error );
 
+		// Clear any pending retry timer to prevent memory leaks.
+		if ( item.retryTimerId ) {
+			clearTimeout( item.retryTimerId );
+		}
+
 		item.abortController?.abort();
 
 		// Cancel any ongoing vips operations for this item.
@@ -270,6 +275,11 @@ export function retryItem( id: QueueItemId ) {
 			previousError: item.error.message,
 		} );
 
+		// Clear any pending retry timer to prevent duplicate retries.
+		if ( item.retryTimerId ) {
+			clearTimeout( item.retryTimerId );
+		}
+
 		dispatch< RetryItemAction >( {
 			type: Type.RetryItem,
 			id,
@@ -318,18 +328,19 @@ export function scheduleRetry( id: QueueItemId, error: Error ) {
 
 		logRetryScheduled( id, item.file.name, nextRetryCount, delay );
 
+		// Schedule the retry execution and capture timer ID for cleanup.
+		const retryTimerId = setTimeout( () => {
+			dispatch.executeRetry( id );
+		}, delay );
+
 		dispatch< ScheduleRetryAction >( {
 			type: Type.ScheduleRetry,
 			id,
 			error,
 			retryCount: currentRetryCount,
 			nextRetryTimestamp: Date.now() + delay,
+			retryTimerId,
 		} );
-
-		// Schedule the retry execution
-		setTimeout( () => {
-			dispatch.executeRetry( id );
-		}, delay );
 	};
 }
 

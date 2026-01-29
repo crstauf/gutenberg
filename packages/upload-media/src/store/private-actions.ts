@@ -557,6 +557,11 @@ export function removeItem( id: QueueItemId ) {
 
 		logQueueRemove( id, item.file.name );
 
+		// Clear any pending retry timer to prevent memory leaks.
+		if ( item.retryTimerId ) {
+			clearTimeout( item.retryTimerId );
+		}
+
 		dispatch( {
 			type: Type.Remove,
 			id,

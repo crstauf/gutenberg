@@ -30,6 +30,8 @@ export interface QueueItem {
 	nextRetryTimestamp?: number;
 	/** The operation that failed and needs to be retried. */
 	failedOperation?: Operation;
+	/** Timer ID for scheduled retry, used to clear the timer on cancellation. */
+	retryTimerId?: ReturnType< typeof setTimeout >;
 }
 
 export interface State {
@@ -99,6 +101,7 @@ export type ScheduleRetryAction = Action<
 		error: Error;
 		retryCount: number;
 		nextRetryTimestamp: number;
+		retryTimerId: ReturnType< typeof setTimeout >;
 	}
 >;
 export type PauseItemAction = Action< Type.PauseItem, { id: QueueItemId } >;
