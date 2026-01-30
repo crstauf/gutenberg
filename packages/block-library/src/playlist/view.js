@@ -159,8 +159,12 @@ const { state } = store(
 				const textColor = window.getComputedStyle( ref ).color;
 				const bgColor = getEffectiveBackgroundColor( ref );
 				const baseWaveformColor = colorWithOpacity( textColor, 0.5 );
+				const progressColor = colorWithOpacity( bgColor, 0.5 );
 				const visualizationStyle =
 					ref.getAttribute( 'data-waveform-style' ) || 'bars';
+
+				// Store the button width for progress calculations.
+				const buttonWidth = 60;
 
 				// Create progress background layer (solid color behind played portion).
 				const progressBg = document.createElement( 'div' );
@@ -176,7 +180,7 @@ const { state } = store(
 					url: track.url,
 					visualizationStyle,
 					waveformColor: baseWaveformColor,
-					progressColor: textColor,
+					progressColor,
 					buttonColor: textColor,
 				} );
 				baseWrapper.appendChild( baseContainer );
@@ -189,7 +193,7 @@ const { state } = store(
 					url: track.url,
 					visualizationStyle,
 					waveformColor: textColor,
-					progressColor: textColor,
+					progressColor,
 					buttonColor: textColor,
 				} );
 				hoverWrapper.appendChild( hoverContainer );
@@ -245,10 +249,12 @@ const { state } = store(
 					( event ) => {
 						if ( ref._progressBg && event.detail?.duration ) {
 							const progress =
-								( event.detail.currentTime /
-									event.detail.duration ) *
-								100;
-							ref._progressBg.style.width = `${ progress }%`;
+								event.detail.currentTime /
+								event.detail.duration;
+							// Calculate width based on track area (excluding button).
+							const trackWidth = ref.offsetWidth - buttonWidth;
+							const progressWidth = progress * trackWidth;
+							ref._progressBg.style.width = `${ progressWidth }px`;
 						}
 					}
 				);

@@ -62,14 +62,15 @@
 		}
 	}
 
-	// Progress background layer (solid color behind played portion).
+	// Progress background layer (semi-transparent color behind played portion).
+	// Uses 30% opacity so the waveform bars remain visible through the overlay.
 	.wp-block-playlist__waveform-progress {
 		position: absolute;
 		top: 0;
 		left: 60px;
 		width: 0;
 		height: 100%;
-		background-color: currentColor;
+		background-color: color-mix(in srgb, currentColor 30%, transparent);
 		pointer-events: none;
 		z-index: 0;
 	}

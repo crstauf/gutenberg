@@ -111,13 +111,16 @@ const CurrentTrack = ( {
 			'data-waveform-style',
 			visualizationStyle || 'bars'
 		);
-		// Get the text color for styling.
+		// Get the text and background colors for styling.
 		const textColor = window.getComputedStyle( currentElement ).color;
+		const bgColor = getEffectiveBackgroundColor( currentElement );
 		// Convert rgb to rgba with different opacities using shared utility.
 		const waveformColor = colorWithOpacity( textColor, 0.3 );
 		const progressBgColor = colorWithOpacity( textColor, 0.1 );
+		// Use bgColor at 50% for played bars so they contrast with progress background.
+		const progressColor = colorWithOpacity( bgColor, 0.5 );
 		currentElement.setAttribute( 'data-waveform-color', waveformColor );
-		currentElement.setAttribute( 'data-progress-color', textColor );
+		currentElement.setAttribute( 'data-progress-color', progressColor );
 		currentElement.setAttribute(
 			'data-progress-background-color',
 			progressBgColor
@@ -140,8 +143,7 @@ const CurrentTrack = ( {
 		const instance = new WaveformPlayer( currentElement );
 		waveformInstanceRef.current = instance;
 
-		// Get the background color and apply it to the SVG icons for contrast.
-		const bgColor = getEffectiveBackgroundColor( currentElement );
+		// Apply background color to the SVG icons for contrast.
 		const svgPaths = currentElement.querySelectorAll( 'svg path' );
 		svgPaths.forEach( ( path ) => {
 			path.style.fill = bgColor;
