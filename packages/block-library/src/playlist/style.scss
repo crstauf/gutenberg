@@ -135,6 +135,7 @@
 	.waveform-container {
 		flex: 1 1 auto;
 
+		// Override WaveformPlayer's inline width style on the canvas.
 		canvas {
 			width: 100% !important;
 		}
@@ -160,6 +161,7 @@
 	}
 
 	// Hide WaveformPlayer's built-in info display since we show our own.
+	// Using !important to override the library's inline styles.
 	.waveform-info,
 	.waveform-time {
 		display: none !important;

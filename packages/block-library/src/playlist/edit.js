@@ -41,6 +41,7 @@ import { createBlock } from '@wordpress/blocks';
  */
 import { Caption } from '../utils/caption';
 import { useToolsPanelDropdownMenuProps } from '../utils/hooks';
+import { colorWithOpacity, getEffectiveBackgroundColor } from './utils';
 
 const ALLOWED_MEDIA_TYPES = [ 'audio' ];
 
@@ -110,15 +111,11 @@ const CurrentTrack = ( {
 			'data-waveform-style',
 			visualizationStyle || 'bars'
 		);
-		// Get the text color for styling
+		// Get the text color for styling.
 		const textColor = window.getComputedStyle( currentElement ).color;
-		// Convert rgb to rgba with different opacities
-		const waveformColor = textColor.startsWith( 'rgba' )
-			? textColor.replace( /[\d.]+\)$/, '0.3)' )
-			: textColor.replace( 'rgb(', 'rgba(' ).replace( ')', ', 0.3)' );
-		const progressBgColor = textColor.startsWith( 'rgba' )
-			? textColor.replace( /[\d.]+\)$/, '0.1)' )
-			: textColor.replace( 'rgb(', 'rgba(' ).replace( ')', ', 0.1)' );
+		// Convert rgb to rgba with different opacities using shared utility.
+		const waveformColor = colorWithOpacity( textColor, 0.3 );
+		const progressBgColor = colorWithOpacity( textColor, 0.1 );
 		currentElement.setAttribute( 'data-waveform-color', waveformColor );
 		currentElement.setAttribute( 'data-progress-color', textColor );
 		currentElement.setAttribute(
@@ -143,11 +140,8 @@ const CurrentTrack = ( {
 		const instance = new WaveformPlayer( currentElement );
 		waveformInstanceRef.current = instance;
 
-		// Get the background color from the block container and apply it to the SVG icons.
-		const blockContainer = currentElement.closest( '.wp-block-playlist' );
-		const bgColor = blockContainer
-			? window.getComputedStyle( blockContainer ).backgroundColor
-			: window.getComputedStyle( currentElement ).backgroundColor;
+		// Get the background color and apply it to the SVG icons for contrast.
+		const bgColor = getEffectiveBackgroundColor( currentElement );
 		const svgPaths = currentElement.querySelectorAll( 'svg path' );
 		svgPaths.forEach( ( path ) => {
 			path.style.fill = bgColor;
@@ -179,12 +173,7 @@ const CurrentTrack = ( {
 			<div
 				ref={ waveformRef }
 				className="wp-block-playlist__waveform-player"
-				data-waveform-player
 				data-waveform-style={ visualizationStyle || 'bars' }
-				data-url={ track?.src || '' }
-				data-title=""
-				data-subtitle=""
-				data-show-time="false"
 				aria-label={ ariaLabel }
 			/>
 			<div className="wp-block-playlist__current-item">

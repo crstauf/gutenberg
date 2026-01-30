@@ -10,6 +10,15 @@ import '@arraypress/waveform-player/dist/waveform-player.css';
 import { store, getContext, getElement } from '@wordpress/interactivity';
 
 /**
+ * Internal dependencies
+ */
+import {
+	colorWithOpacity,
+	getEffectiveBackgroundColor,
+	createWaveformContainer,
+} from './utils';
+
+/**
  * Store references to initialized WaveformPlayer instances.
  */
 const waveformInstances = new Map();
@@ -103,6 +112,19 @@ const { state } = store(
 					return;
 				}
 
+				// Clean up any existing event handlers first.
+				if ( ref._hoverHandlers ) {
+					ref.removeEventListener(
+						'mouseleave',
+						ref._hoverHandlers.handleMouseLeave
+					);
+					ref.removeEventListener(
+						'mousemove',
+						ref._hoverHandlers.handleMouseMove
+					);
+					delete ref._hoverHandlers;
+				}
+
 				// Always clean up any existing player content first.
 				const existingInstance = waveformInstances.get( ref );
 				if ( existingInstance?.destroy ) {
@@ -133,35 +155,10 @@ const { state } = store(
 				// Track what URL we're initializing.
 				lastInitializedUrl.set( ref, track.url );
 
-				// Get the text color for styling.
+				// Get colors for styling.
 				const textColor = window.getComputedStyle( ref ).color;
-
-				// Get the background color from the block container, falling back to body if empty/transparent.
-				const blockContainer = ref.closest( '.wp-block-playlist' );
-				let bgColor = blockContainer
-					? window.getComputedStyle( blockContainer ).backgroundColor
-					: window.getComputedStyle( ref ).backgroundColor;
-
-				// Check if background is transparent/empty and fall back to body background.
-				const isTransparent =
-					! bgColor ||
-					bgColor === 'transparent' ||
-					bgColor === 'rgba(0, 0, 0, 0)' ||
-					bgColor.match( /rgba\([^)]+,\s*0\s*\)/ );
-				if ( isTransparent ) {
-					bgColor = window.getComputedStyle(
-						document.body
-					).backgroundColor;
-				}
-
-				// Convert rgb to rgba with 50% opacity for base waveform bars.
-				const waveformColor = textColor.startsWith( 'rgba' )
-					? textColor.replace( /[\d.]+\)$/, '0.5)' )
-					: textColor
-							.replace( 'rgb(', 'rgba(' )
-							.replace( ')', ', 0.5)' );
-
-				// Get visualization style from attribute.
+				const bgColor = getEffectiveBackgroundColor( ref );
+				const baseWaveformColor = colorWithOpacity( textColor, 0.5 );
 				const visualizationStyle =
 					ref.getAttribute( 'data-waveform-style' ) || 'bars';
 
@@ -175,41 +172,26 @@ const { state } = store(
 				// We use a wrapper because WaveformPlayer overwrites the className of its container.
 				const baseWrapper = document.createElement( 'div' );
 				baseWrapper.className = 'wp-block-playlist__waveform-base';
-				const baseContainer = document.createElement( 'div' );
-				baseContainer.setAttribute( 'data-waveform-player', '' );
-				baseContainer.setAttribute( 'data-url', track.url );
-				baseContainer.setAttribute(
-					'data-waveform-style',
-					visualizationStyle
-				);
-				baseContainer.setAttribute(
-					'data-waveform-color',
-					waveformColor
-				);
-				baseContainer.setAttribute( 'data-progress-color', textColor );
-				baseContainer.setAttribute( 'data-button-color', textColor );
-				baseContainer.setAttribute( 'data-title', '' );
-				baseContainer.setAttribute( 'data-subtitle', '' );
-				baseContainer.setAttribute( 'data-show-time', 'false' );
+				const baseContainer = createWaveformContainer( {
+					url: track.url,
+					visualizationStyle,
+					waveformColor: baseWaveformColor,
+					progressColor: textColor,
+					buttonColor: textColor,
+				} );
 				baseWrapper.appendChild( baseContainer );
 				ref.appendChild( baseWrapper );
 
 				// Create wrapper for the hover waveform (full opacity).
 				const hoverWrapper = document.createElement( 'div' );
 				hoverWrapper.className = 'wp-block-playlist__waveform-hover';
-				const hoverContainer = document.createElement( 'div' );
-				hoverContainer.setAttribute( 'data-waveform-player', '' );
-				hoverContainer.setAttribute( 'data-url', track.url );
-				hoverContainer.setAttribute(
-					'data-waveform-style',
-					visualizationStyle
-				);
-				hoverContainer.setAttribute( 'data-waveform-color', textColor );
-				hoverContainer.setAttribute( 'data-progress-color', textColor );
-				hoverContainer.setAttribute( 'data-button-color', textColor );
-				hoverContainer.setAttribute( 'data-title', '' );
-				hoverContainer.setAttribute( 'data-subtitle', '' );
-				hoverContainer.setAttribute( 'data-show-time', 'false' );
+				const hoverContainer = createWaveformContainer( {
+					url: track.url,
+					visualizationStyle,
+					waveformColor: textColor,
+					progressColor: textColor,
+					buttonColor: textColor,
+				} );
 				hoverWrapper.appendChild( hoverContainer );
 				ref.appendChild( hoverWrapper );
 
