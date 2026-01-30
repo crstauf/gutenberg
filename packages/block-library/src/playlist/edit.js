@@ -182,6 +182,9 @@ const CurrentTrack = ( {
 				data-waveform-player
 				data-waveform-style={ visualizationStyle || 'bars' }
 				data-url={ track?.src || '' }
+				data-title=""
+				data-subtitle=""
+				data-show-time="false"
 				aria-label={ ariaLabel }
 			/>
 			<div className="wp-block-playlist__current-item">
@@ -497,6 +500,7 @@ const PlaylistEdit = ( {
 							showNumbers: true,
 							showImages: true,
 							order: 'asc',
+							visualizationStyle: 'bars',
 						} );
 					} }
 					dropdownMenuProps={ dropdownMenuProps }
@@ -582,6 +586,32 @@ const PlaylistEdit = ( {
 								{ label: __( 'Ascending' ), value: 'asc' },
 							] }
 							onChange={ ( value ) => onChangeOrder( value ) }
+						/>
+					</ToolsPanelItem>
+					<ToolsPanelItem
+						label={ __( 'Visualization style' ) }
+						isShownByDefault
+						hasValue={ () => visualizationStyle !== 'bars' }
+						onDeselect={ () =>
+							setAttributes( { visualizationStyle: 'bars' } )
+						}
+					>
+						<SelectControl
+							__next40pxDefaultSize
+							__nextHasNoMarginBottom
+							label={ __( 'Visualization style' ) }
+							value={ visualizationStyle || 'bars' }
+							options={ [
+								{ label: __( 'Bars' ), value: 'bars' },
+								{ label: __( 'Mirror' ), value: 'mirror' },
+								{ label: __( 'Line' ), value: 'line' },
+								{ label: __( 'Blocks' ), value: 'blocks' },
+								{ label: __( 'Dots' ), value: 'dots' },
+								{ label: __( 'Seekbar' ), value: 'seekbar' },
+							] }
+							onChange={ ( value ) =>
+								setAttributes( { visualizationStyle: value } )
+							}
 						/>
 					</ToolsPanelItem>
 				</ToolsPanel>

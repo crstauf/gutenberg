@@ -46,14 +46,69 @@
 		margin-top: 10px;
 	}
 
-	.wp-block-playlist__waveform-player,
-	.waveform-player {
+	// Main waveform player container.
+	.wp-block-playlist__waveform-player {
 		width: 100%;
 		margin-top: 10px;
+		margin-bottom: $grid-unit-20;
+		position: relative;
+		// Fixed height to match WaveformPlayer default.
+		height: 60px;
+		overflow: hidden;
 
 		// Style the audio element inside WaveformPlayer.
 		audio {
 			margin-top: 0;
+		}
+	}
+
+	// Progress background layer (solid color behind played portion).
+	.wp-block-playlist__waveform-progress {
+		position: absolute;
+		top: 0;
+		left: 60px;
+		width: 0;
+		height: 100%;
+		background-color: currentColor;
+		pointer-events: none;
+		z-index: 0;
+	}
+
+	// Base and hover waveform layers share common positioning.
+	.wp-block-playlist__waveform-base,
+	.wp-block-playlist__waveform-hover {
+		position: absolute;
+		top: 0;
+		left: 0;
+		width: 100%;
+		height: 100%;
+
+		// Ensure internal WaveformPlayer fills the container.
+		.waveform-player {
+			width: 100%;
+			height: 100%;
+			margin: 0;
+		}
+
+		.waveform-track {
+			height: 100%;
+		}
+	}
+
+	// Base waveform layer (reduced opacity bars).
+	.wp-block-playlist__waveform-base {
+		z-index: 1;
+	}
+
+	// Hover waveform layer (full opacity bars, revealed on hover).
+	.wp-block-playlist__waveform-hover {
+		clip-path: inset(0 100% 0 0);
+		pointer-events: none;
+		z-index: 2;
+
+		// Hide the play button in hover layer.
+		.waveform-btn {
+			visibility: hidden;
 		}
 	}
 
@@ -89,6 +144,12 @@
 
 	.waveform-progress {
 		background: color-mix(in srgb, currentColor 30%, transparent);
+	}
+
+	// Hide WaveformPlayer's built-in info display since we show our own.
+	.waveform-info,
+	.waveform-time {
+		display: none !important;
 	}
 
 	.wp-block-playlist__tracklist {

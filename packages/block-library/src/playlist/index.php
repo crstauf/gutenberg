@@ -101,7 +101,6 @@ function render_block_core_playlist( $attributes, $content, $block ) {
 
 	$html = '<div
 			class="wp-block-playlist__waveform-player"
-			data-waveform-player
 			data-waveform-style="' . esc_attr( $visualization_style ) . '"
 			data-wp-bind--data-url="state.currentTrack.url"
 			data-wp-bind--aria-label="state.currentTrack.ariaLabel"

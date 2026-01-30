@@ -10,9 +10,10 @@ import '@arraypress/waveform-player/dist/waveform-player.css';
 import { store, getContext, getElement } from '@wordpress/interactivity';
 
 /**
- * Store a reference to initialized WaveformPlayer instances.
+ * Store references to initialized WaveformPlayer instances.
  */
 const waveformInstances = new Map();
+const hoverInstances = new Map();
 
 /**
  * Track the last URL we initialized for each element to detect track changes.
@@ -103,8 +104,6 @@ const { state } = store(
 				}
 
 				// Always clean up any existing player content first.
-				// This handles both our manually created instances and
-				// any auto-initialized players from the WaveformPlayer library.
 				const existingInstance = waveformInstances.get( ref );
 				if ( existingInstance?.destroy ) {
 					try {
@@ -113,6 +112,16 @@ const { state } = store(
 						// Ignore errors during cleanup.
 					}
 					waveformInstances.delete( ref );
+				}
+
+				const existingHoverInstance = hoverInstances.get( ref );
+				if ( existingHoverInstance?.destroy ) {
+					try {
+						existingHoverInstance.destroy();
+					} catch ( e ) {
+						// Ignore errors during cleanup.
+					}
+					hoverInstances.delete( ref );
 				}
 
 				// Clear any DOM elements from previous player.
@@ -124,15 +133,15 @@ const { state } = store(
 				// Track what URL we're initializing.
 				lastInitializedUrl.set( ref, track.url );
 
-				// Set the url attribute for WaveformPlayer.
-				ref.setAttribute( 'data-url', track.url );
-				// Get the text color for styling
+				// Get the text color for styling.
 				const textColor = window.getComputedStyle( ref ).color;
+
 				// Get the background color from the block container, falling back to body if empty/transparent.
 				const blockContainer = ref.closest( '.wp-block-playlist' );
 				let bgColor = blockContainer
 					? window.getComputedStyle( blockContainer ).backgroundColor
 					: window.getComputedStyle( ref ).backgroundColor;
+
 				// Check if background is transparent/empty and fall back to body background.
 				const isTransparent =
 					! bgColor ||
@@ -144,114 +153,112 @@ const { state } = store(
 						document.body
 					).backgroundColor;
 				}
-				// Convert rgb to rgba with 50% opacity for unplayed bars
+
+				// Convert rgb to rgba with 50% opacity for base waveform bars.
 				const waveformColor = textColor.startsWith( 'rgba' )
 					? textColor.replace( /[\d.]+\)$/, '0.5)' )
 					: textColor
 							.replace( 'rgb(', 'rgba(' )
 							.replace( ')', ', 0.5)' );
-				// Convert bgColor to rgba with 50% opacity for played bars
-				const progressColor = bgColor.startsWith( 'rgba' )
-					? bgColor.replace( /[\d.]+\)$/, '0.5)' )
-					: bgColor
-							.replace( 'rgb(', 'rgba(' )
-							.replace( ')', ', 0.5)' );
-				ref.setAttribute( 'data-waveform-color', waveformColor );
-				ref.setAttribute( 'data-progress-color', progressColor );
-				ref.setAttribute( 'data-button-color', textColor );
 
-				// Create new WaveformPlayer instance.
-				const instance = new WaveformPlayer( ref );
-				waveformInstances.set( ref, instance );
+				// Get visualization style from attribute.
+				const visualizationStyle =
+					ref.getAttribute( 'data-waveform-style' ) || 'bars';
+
+				// Create progress background layer (solid color behind played portion).
+				const progressBg = document.createElement( 'div' );
+				progressBg.className = 'wp-block-playlist__waveform-progress';
+				ref.appendChild( progressBg );
+				ref._progressBg = progressBg;
+
+				// Create wrapper for the base waveform (reduced opacity).
+				// We use a wrapper because WaveformPlayer overwrites the className of its container.
+				const baseWrapper = document.createElement( 'div' );
+				baseWrapper.className = 'wp-block-playlist__waveform-base';
+				const baseContainer = document.createElement( 'div' );
+				baseContainer.setAttribute( 'data-waveform-player', '' );
+				baseContainer.setAttribute( 'data-url', track.url );
+				baseContainer.setAttribute(
+					'data-waveform-style',
+					visualizationStyle
+				);
+				baseContainer.setAttribute(
+					'data-waveform-color',
+					waveformColor
+				);
+				baseContainer.setAttribute( 'data-progress-color', textColor );
+				baseContainer.setAttribute( 'data-button-color', textColor );
+				baseContainer.setAttribute( 'data-title', '' );
+				baseContainer.setAttribute( 'data-subtitle', '' );
+				baseContainer.setAttribute( 'data-show-time', 'false' );
+				baseWrapper.appendChild( baseContainer );
+				ref.appendChild( baseWrapper );
+
+				// Create wrapper for the hover waveform (full opacity).
+				const hoverWrapper = document.createElement( 'div' );
+				hoverWrapper.className = 'wp-block-playlist__waveform-hover';
+				const hoverContainer = document.createElement( 'div' );
+				hoverContainer.setAttribute( 'data-waveform-player', '' );
+				hoverContainer.setAttribute( 'data-url', track.url );
+				hoverContainer.setAttribute(
+					'data-waveform-style',
+					visualizationStyle
+				);
+				hoverContainer.setAttribute( 'data-waveform-color', textColor );
+				hoverContainer.setAttribute( 'data-progress-color', textColor );
+				hoverContainer.setAttribute( 'data-button-color', textColor );
+				hoverContainer.setAttribute( 'data-title', '' );
+				hoverContainer.setAttribute( 'data-subtitle', '' );
+				hoverContainer.setAttribute( 'data-show-time', 'false' );
+				hoverWrapper.appendChild( hoverContainer );
+				ref.appendChild( hoverWrapper );
+
+				// Create base WaveformPlayer instance.
+				const baseInstance = new WaveformPlayer( baseContainer );
+				waveformInstances.set( ref, baseInstance );
+
+				// Create hover WaveformPlayer instance.
+				const hoverInstance = new WaveformPlayer( hoverContainer );
+				hoverInstances.set( ref, hoverInstance );
 
 				// Apply background color to SVG icons for contrast.
-				const svgPaths = ref.querySelectorAll( 'svg path' );
+				const svgPaths = baseContainer.querySelectorAll( 'svg path' );
 				svgPaths.forEach( ( path ) => {
 					path.style.fill = bgColor;
 				} );
 
-				// Create progress background overlay element.
-				const waveformContainer = ref.querySelector(
-					'.waveform-container'
-				);
-				if ( waveformContainer ) {
-					// Remove any existing progress background.
-					const existingProgressBg = waveformContainer.querySelector(
-						'.wp-block-playlist__progress-bg'
-					);
-					if ( existingProgressBg ) {
-						existingProgressBg.remove();
-					}
-
-					// Create the progress background element.
-					// Use text color as background for played area.
-					const progressBg = document.createElement( 'div' );
-					progressBg.className = 'wp-block-playlist__progress-bg';
-					progressBg.style.cssText = `
-						position: absolute;
-						top: 0;
-						left: 0;
-						height: 60px;
-						width: 0%;
-						background-color: ${ textColor };
-						pointer-events: none;
-						z-index: 0;
-					`;
-					waveformContainer.style.position = 'relative';
-					waveformContainer.insertBefore(
-						progressBg,
-						waveformContainer.firstChild
-					);
-
-					// Store reference for updating.
-					ref._progressBg = progressBg;
-
-					// Create hover overlay for showing potential seek position.
-					const hoverBg = document.createElement( 'div' );
-					hoverBg.className = 'wp-block-playlist__hover-bg';
-					hoverBg.style.cssText = `
-						position: absolute;
-						top: 0;
-						left: 0;
-						height: 60px;
-						width: 0%;
-						background-color: ${ waveformColor };
-						pointer-events: none;
-						z-index: 0;
-						opacity: 0;
-						transition: opacity 0.15s ease;
-					`;
-					waveformContainer.insertBefore(
-						hoverBg,
-						waveformContainer.firstChild
-					);
-					ref._hoverBg = hoverBg;
-
-					// Handle hover events on waveform container.
-					waveformContainer.addEventListener( 'mouseenter', () => {
-						hoverBg.style.opacity = '1';
-					} );
-					waveformContainer.addEventListener( 'mouseleave', () => {
-						hoverBg.style.opacity = '0';
-					} );
-					waveformContainer.addEventListener(
-						'mousemove',
-						( event ) => {
-							const rect =
-								waveformContainer.getBoundingClientRect();
-							const hoverProgress =
-								( ( event.clientX - rect.left ) / rect.width ) *
-								100;
-							hoverBg.style.width = `${ Math.max(
-								0,
-								Math.min( 100, hoverProgress )
-							) }%`;
-						}
-					);
+				// Hide the play button in the hover player (we only use the base player's button).
+				// Use visibility:hidden to preserve the button's space in the layout.
+				const hoverPlayBtn =
+					hoverContainer.querySelector( '.waveform-btn' );
+				if ( hoverPlayBtn ) {
+					hoverPlayBtn.style.visibility = 'hidden';
 				}
 
+				// Handle hover events to show/hide the hover waveform.
+				// Use the parent container (ref) for consistent sizing.
+				// Apply clip-path to hoverWrapper (which has CSS positioning).
+				const handleMouseLeave = () => {
+					hoverWrapper.style.clipPath = 'inset(0 100% 0 0)';
+				};
+
+				const handleMouseMove = ( event ) => {
+					const rect = ref.getBoundingClientRect();
+					const hoverProgress =
+						( ( event.clientX - rect.left ) / rect.width ) * 100;
+					const clipRight =
+						100 - Math.max( 0, Math.min( 100, hoverProgress ) );
+					hoverWrapper.style.clipPath = `inset(0 ${ clipRight }% 0 0)`;
+				};
+
+				ref.addEventListener( 'mouseleave', handleMouseLeave );
+				ref.addEventListener( 'mousemove', handleMouseMove );
+
+				// Store event handlers for cleanup.
+				ref._hoverHandlers = { handleMouseLeave, handleMouseMove };
+
 				// Listen to WaveformPlayer custom events for progress updates.
-				ref.addEventListener(
+				baseContainer.addEventListener(
 					'waveformplayer:timeupdate',
 					( event ) => {
 						if ( ref._progressBg && event.detail?.duration ) {
@@ -264,7 +271,7 @@ const { state } = store(
 					}
 				);
 
-				ref.addEventListener( 'waveformplayer:ended', () => {
+				baseContainer.addEventListener( 'waveformplayer:ended', () => {
 					ref.dispatchEvent(
 						new CustomEvent( 'waveform-ended', {
 							bubbles: true,
@@ -277,7 +284,7 @@ const { state } = store(
 					}
 				} );
 
-				ref.addEventListener( 'waveformplayer:play', () => {
+				baseContainer.addEventListener( 'waveformplayer:play', () => {
 					ref.dispatchEvent(
 						new CustomEvent( 'waveform-play', {
 							bubbles: true,
@@ -286,7 +293,7 @@ const { state } = store(
 					);
 				} );
 
-				ref.addEventListener( 'waveformplayer:pause', () => {
+				baseContainer.addEventListener( 'waveformplayer:pause', () => {
 					ref.dispatchEvent(
 						new CustomEvent( 'waveform-pause', {
 							bubbles: true,
@@ -296,8 +303,8 @@ const { state } = store(
 				} );
 
 				// Auto-play if the context says we should be playing.
-				if ( context.isPlaying && instance ) {
-					instance.play();
+				if ( context.isPlaying && baseInstance ) {
+					baseInstance.play();
 				}
 			},
 		},
