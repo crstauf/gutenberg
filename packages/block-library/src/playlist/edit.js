@@ -136,6 +136,9 @@ const CurrentTrack = ( {
 			}
 		}
 
+		// Clear any leftover DOM elements from previous player.
+		currentElement.innerHTML = '';
+
 		// Create new WaveformPlayer instance.
 		const instance = new WaveformPlayer( currentElement );
 		waveformInstanceRef.current = instance;
@@ -173,6 +176,14 @@ const CurrentTrack = ( {
 
 	return (
 		<>
+			<div
+				ref={ waveformRef }
+				className="wp-block-playlist__waveform-player"
+				data-waveform-player
+				data-waveform-style={ visualizationStyle || 'bars' }
+				data-url={ track?.src || '' }
+				aria-label={ ariaLabel }
+			/>
 			<div className="wp-block-playlist__current-item">
 				{ showImages && track?.image && (
 					<img
@@ -206,14 +217,6 @@ const CurrentTrack = ( {
 					</div>
 				</div>
 			</div>
-			<div
-				ref={ waveformRef }
-				className="wp-block-playlist__waveform-player"
-				data-waveform-player
-				data-waveform-style={ visualizationStyle || 'bars' }
-				data-url={ track?.src || '' }
-				aria-label={ ariaLabel }
-			/>
 		</>
 	);
 };

@@ -14,6 +14,11 @@ import { store, getContext, getElement } from '@wordpress/interactivity';
  */
 const waveformInstances = new Map();
 
+/**
+ * Track the last URL we initialized for each element to detect track changes.
+ */
+const lastInitializedUrl = new Map();
+
 const { state } = store(
 	'core/playlist',
 	{
@@ -92,12 +97,32 @@ const { state } = store(
 					return;
 				}
 
-				// Skip reinitialization if instance already exists for the same track.
-				const existingInstance = waveformInstances.get( ref );
-				const currentUrl = ref.getAttribute( 'data-url' );
-				if ( existingInstance && currentUrl === track.url ) {
+				// Skip if we already initialized with this exact URL.
+				if ( lastInitializedUrl.get( ref ) === track.url ) {
 					return;
 				}
+
+				// Always clean up any existing player content first.
+				// This handles both our manually created instances and
+				// any auto-initialized players from the WaveformPlayer library.
+				const existingInstance = waveformInstances.get( ref );
+				if ( existingInstance?.destroy ) {
+					try {
+						existingInstance.destroy();
+					} catch ( e ) {
+						// Ignore errors during cleanup.
+					}
+					waveformInstances.delete( ref );
+				}
+
+				// Clear any DOM elements from previous player.
+				ref.innerHTML = '';
+
+				// Remove the initialized flag so WaveformPlayer creates fresh.
+				ref.removeAttribute( 'data-waveform-initialized' );
+
+				// Track what URL we're initializing.
+				lastInitializedUrl.set( ref, track.url );
 
 				// Set the url attribute for WaveformPlayer.
 				ref.setAttribute( 'data-url', track.url );
@@ -134,15 +159,6 @@ const { state } = store(
 				ref.setAttribute( 'data-waveform-color', waveformColor );
 				ref.setAttribute( 'data-progress-color', progressColor );
 				ref.setAttribute( 'data-button-color', textColor );
-
-				// Destroy existing instance if switching tracks.
-				if ( existingInstance?.destroy ) {
-					try {
-						existingInstance.destroy();
-					} catch ( e ) {
-						// Ignore errors during cleanup.
-					}
-				}
 
 				// Create new WaveformPlayer instance.
 				const instance = new WaveformPlayer( ref );

@@ -97,7 +97,20 @@ function render_block_core_playlist( $attributes, $content, $block ) {
 	);
 
 	// Create the HTML for the current track which shows above the tracklist.
-	$html = '<div class="wp-block-playlist__current-item">';
+	$visualization_style = isset( $attributes['visualizationStyle'] ) ? $attributes['visualizationStyle'] : 'bars';
+
+	$html = '<div
+			class="wp-block-playlist__waveform-player"
+			data-waveform-player
+			data-waveform-style="' . esc_attr( $visualization_style ) . '"
+			data-wp-bind--data-url="state.currentTrack.url"
+			data-wp-bind--aria-label="state.currentTrack.ariaLabel"
+			data-wp-watch="callbacks.initWaveformPlayer"
+			data-wp-on-document--waveform-ended="actions.nextSong"
+			data-wp-on-document--waveform-play="actions.isPlaying"
+			data-wp-on-document--waveform-pause="actions.isPaused"
+		></div>
+		<div class="wp-block-playlist__current-item">';
 
 	// The alt attribute is intentionally left empty, as the image is decorative.
 	if ( isset( $attributes['showImages'] ) ? $attributes['showImages'] : false ) {
@@ -112,8 +125,6 @@ function render_block_core_playlist( $attributes, $content, $block ) {
 		/>';
 	}
 
-	$visualization_style = isset( $attributes['visualizationStyle'] ) ? $attributes['visualizationStyle'] : 'bars';
-
 	$html .= '
 		<div>
 			<span class="wp-block-playlist__item-title" data-wp-text="state.currentTrack.title"></span>
@@ -123,17 +134,6 @@ function render_block_core_playlist( $attributes, $content, $block ) {
 			</div>
 		</div>
 	</div>
-		<div
-			class="wp-block-playlist__waveform-player"
-			data-waveform-player
-			data-waveform-style="' . esc_attr( $visualization_style ) . '"
-			data-wp-bind--data-url="state.currentTrack.url"
-			data-wp-bind--aria-label="state.currentTrack.ariaLabel"
-			data-wp-watch="callbacks.initWaveformPlayer"
-			data-wp-on-document--waveform-ended="actions.nextSong"
-			data-wp-on-document--waveform-play="actions.isPlaying"
-			data-wp-on-document--waveform-pause="actions.isPaused"
-		></div>
 	';
 
 	// Add the HTML for the current track inside the figure.
