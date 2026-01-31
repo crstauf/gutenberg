@@ -1,9 +1,25 @@
 <?php
 /**
- * Adds media-related experimental functionality.
+ * Adds media-related functionality for client-side media processing.
  *
  * @package gutenberg
  */
+
+/**
+ * Filters whether client-side media processing is enabled.
+ *
+ * Client-side media processing uses the browser's capabilities to handle
+ * tasks like image resizing and compression before uploading to the server.
+ *
+ * @since 20.8.0
+ *
+ * @param bool $enabled Whether client-side media processing is enabled. Default true.
+ */
+$client_side_media_enabled = apply_filters( 'gutenberg_client_side_media_processing_enabled', true );
+
+if ( ! $client_side_media_enabled ) {
+	return;
+}
 
 /**
  * Debug logging for client-side media processing (load.php).
@@ -240,9 +256,9 @@ function gutenberg_rest_get_attachment_filesize( array $post ): ?int {
  * @return string Filtered rewrite rules.
  */
 function gutenberg_filter_mod_rewrite_rules( string $rules ): string {
-	$rules .= "\n# BEGIN Gutenberg client-side media processing experiment\n" .
+	$rules .= "\n# BEGIN Gutenberg client-side media processing\n" .
 				"AddType application/wasm wasm\n" .
-				"# END Gutenberg client-side media processing experiment\n";
+				"# END Gutenberg client-side media processing\n";
 
 	return $rules;
 }
