@@ -900,6 +900,7 @@ test.describe( 'Navigation block', () => {
 				await navigation.useBlockInserter();
 				const linkControlSearch = navigation.getLinkControlSearch();
 				await expect( linkControlSearch ).toBeFocused();
+				await page.keyboard.type( 'New Page Title' );
 			} );
 
 			await test.step( 'Click Create Page button', async () => {
@@ -913,6 +914,13 @@ test.describe( 'Navigation block', () => {
 				// expect the "Create page" button to be focused
 				await expect( createPageButton ).toBeFocused();
 				await page.keyboard.press( 'Enter' );
+			} );
+
+			const titleField = page.getByRole( 'textbox', { name: 'Title' } );
+
+			await test.step( 'Verify page title is pre-populated', async () => {
+				await expect( titleField ).toBeFocused();
+				await expect( titleField ).toHaveValue( 'New Page Title' );
 			} );
 
 			await test.step( 'Verify Back button returns focus to Create page button', async () => {
@@ -940,10 +948,8 @@ test.describe( 'Navigation block', () => {
 				// Tab to the title field
 				await page.keyboard.press( 'Tab' );
 
-				await expect(
-					page.getByRole( 'textbox', { name: 'Title' } )
-				).toBeFocused();
-				await page.keyboard.type( 'Newly Created Page' );
+				await expect( titleField ).toBeFocused();
+				await expect( titleField ).toHaveValue( 'New Page Title' );
 				const createPageButton = page.getByRole( 'button', {
 					name: 'Create page',
 				} );
