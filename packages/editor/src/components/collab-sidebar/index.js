@@ -30,7 +30,7 @@ import {
 	useBlockCommentsActions,
 	useEnableFloatingSidebar,
 } from './hooks';
-import { focusCommentThread } from './utils';
+import { focusCommentThread, getNoteIdsFromMetadata } from './utils';
 import PostTypeSupportCheck from '../post-type-support-check';
 import { unlock } from '../../lock-unlock';
 
@@ -85,15 +85,16 @@ function NotesSidebar( { postId } ) {
 	const isLargeViewport = useViewportMatch( 'medium' );
 	const commentSidebarRef = useRef( null );
 
-	const { clientId, blockCommentId } = useSelect( ( select ) => {
+	const { clientId, blockNoteIds } = useSelect( ( select ) => {
 		const { getBlockAttributes, getSelectedBlockClientId } =
 			select( blockEditorStore );
 		const _clientId = getSelectedBlockClientId();
+		const metadata = _clientId
+			? getBlockAttributes( _clientId )?.metadata
+			: null;
 		return {
 			clientId: _clientId,
-			blockCommentId: _clientId
-				? getBlockAttributes( _clientId )?.metadata?.noteId
-				: null,
+			blockNoteIds: getNoteIdsFromMetadata( metadata ),
 		};
 	}, [] );
 	const { isDistractionFree } = useSelect( ( select ) => {
@@ -123,17 +124,25 @@ function NotesSidebar( { postId } ) {
 	const { merged: GlobalStyles } = useGlobalStylesContext();
 	const backgroundColor = GlobalStyles?.styles?.color?.background;
 
-	// Find the current thread for the selected block.
-	const currentThread = blockCommentId
-		? resultComments.find( ( thread ) => thread.id === blockCommentId )
-		: null;
+	// Find threads for the selected block.
+	const currentThreads =
+		blockNoteIds.length > 0
+			? resultComments.filter( ( thread ) =>
+					blockNoteIds.includes( thread.id )
+			  )
+			: [];
+	// Use first unresolved thread, or first thread overall, for UI interactions
+	const currentThread =
+		currentThreads.find( ( thread ) => thread.status === 'hold' ) ??
+		currentThreads[ 0 ] ??
+		null;
 	const showAllNotesSidebar = resultComments.length > 0;
 
-	async function openTheSidebar() {
+	async function openTheSidebar( { addNewNote = false } = {} ) {
 		const prevArea = await getActiveComplementaryArea( 'core' );
 		const activeNotesArea = SIDEBARS.find( ( name ) => name === prevArea );
 
-		if ( currentThread?.status === 'approved' ) {
+		if ( currentThread?.status === 'approved' && ! addNewNote ) {
 			enableComplementaryArea( 'core', collabHistorySidebarName );
 		} else if ( ! activeNotesArea || ! showAllNotesSidebar ) {
 			enableComplementaryArea(
@@ -150,12 +159,14 @@ function NotesSidebar( { postId } ) {
 			return;
 		}
 
-		selectNote( currentThread ? currentThread.id : 'new' );
+		// When addNewNote is true, always open the new note form.
+		// Otherwise, select the existing thread or open new.
+		const shouldAddNew = addNewNote || ! currentThread;
+		selectNote( shouldAddNew ? 'new' : currentThread.id );
 		focusCommentThread(
-			currentThread?.id,
+			shouldAddNew ? undefined : currentThread?.id,
 			commentSidebarRef.current,
-			// Focus the textarea when creating a new note.
-			! currentThread ? 'textarea' : undefined
+			shouldAddNew ? 'textarea' : undefined
 		);
 		toggleBlockSpotlight( clientId, true );
 	}
@@ -172,7 +183,9 @@ function NotesSidebar( { postId } ) {
 					onClick={ openTheSidebar }
 				/>
 			) }
-			<AddCommentMenuItem onClick={ openTheSidebar } />
+			<AddCommentMenuItem
+				onClick={ () => openTheSidebar( { addNewNote: true } ) }
+			/>
 			{ showAllNotesSidebar && (
 				<PluginSidebar
 					identifier={ collabHistorySidebarName }
