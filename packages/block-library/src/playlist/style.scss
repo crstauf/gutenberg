@@ -74,11 +74,9 @@
 		z-index: 0;
 	}
 
-	// Base, played, hover, and played-hover waveform layers share common positioning.
+	// Base and hover waveform layers share common positioning.
 	.wp-block-playlist__waveform-base,
-	.wp-block-playlist__waveform-played,
-	.wp-block-playlist__waveform-hover,
-	.wp-block-playlist__waveform-played-hover {
+	.wp-block-playlist__waveform-played {
 		position: absolute;
 		top: 0;
 		left: 0;
@@ -97,40 +95,16 @@
 		}
 	}
 
-	// Base waveform layer (reduced opacity bars).
+	// Base waveform layer (text-colored bars for unplayed area).
 	.wp-block-playlist__waveform-base {
 		z-index: 1;
 	}
 
-	// Played waveform layer (bars in background color, revealed as audio plays).
+	// Played waveform layer (background-colored bars, clipped to played area).
 	.wp-block-playlist__waveform-played {
 		clip-path: inset(0 100% 0 0);
 		pointer-events: none;
 		z-index: 2;
-
-		// Hide the play button in played layer.
-		.waveform-btn {
-			visibility: hidden;
-		}
-	}
-
-	// Hover waveform layer (full opacity bars, revealed on hover).
-	.wp-block-playlist__waveform-hover {
-		clip-path: inset(0 100% 0 0);
-		pointer-events: none;
-		z-index: 3;
-
-		// Hide the play button in hover layer.
-		.waveform-btn {
-			visibility: hidden;
-		}
-	}
-
-	// Played-hover waveform layer (bg color at 100% for intersection of played and hovered).
-	.wp-block-playlist__waveform-played-hover {
-		clip-path: inset(0 100% 0 0);
-		pointer-events: none;
-		z-index: 4;
 
 		// Hide the play button in this layer.
 		.waveform-btn {
