@@ -15,6 +15,7 @@ import { store, getContext, getElement } from '@wordpress/interactivity';
 import {
 	colorWithOpacity,
 	getEffectiveBackgroundColor,
+	getDominantColor,
 	createWaveformContainer,
 } from './utils';
 
@@ -22,7 +23,7 @@ import {
  * Store references to initialized WaveformPlayer instances.
  */
 const waveformInstances = new Map();
-const playedInstances = new Map();
+const hoverInstances = new Map();
 
 /**
  * Track the last URL we initialized for each element to detect track changes.
@@ -112,6 +113,19 @@ const { state } = store(
 					return;
 				}
 
+				// Clean up any existing event handlers first.
+				if ( ref._hoverHandlers ) {
+					ref.removeEventListener(
+						'mouseleave',
+						ref._hoverHandlers.handleMouseLeave
+					);
+					ref.removeEventListener(
+						'mousemove',
+						ref._hoverHandlers.handleMouseMove
+					);
+					delete ref._hoverHandlers;
+				}
+
 				// Always clean up any existing player content first.
 				const existingInstance = waveformInstances.get( ref );
 				if ( existingInstance?.destroy ) {
@@ -123,14 +137,14 @@ const { state } = store(
 					waveformInstances.delete( ref );
 				}
 
-				const existingPlayedInstance = playedInstances.get( ref );
-				if ( existingPlayedInstance?.destroy ) {
+				const existingHoverInstance = hoverInstances.get( ref );
+				if ( existingHoverInstance?.destroy ) {
 					try {
-						existingPlayedInstance.destroy();
+						existingHoverInstance.destroy();
 					} catch ( e ) {
 						// Ignore errors during cleanup.
 					}
-					playedInstances.delete( ref );
+					hoverInstances.delete( ref );
 				}
 
 				// Clear any DOM elements from previous player.
@@ -152,13 +166,25 @@ const { state } = store(
 				// Store the button width for progress calculations.
 				const buttonWidth = 60;
 
-				// Create progress background layer (solid color behind played portion).
+				// Create progress background layer (darkened background behind played portion).
 				const progressBg = document.createElement( 'div' );
 				progressBg.className = 'wp-block-playlist__waveform-progress';
+				// Default to page background color.
+				progressBg.style.backgroundColor = bgColor;
 				ref.appendChild( progressBg );
 				ref._progressBg = progressBg;
 
-				// Create wrapper for the base waveform (text-colored bars for unplayed area).
+				// Try to extract dominant color from album art.
+				if ( track.image ) {
+					getDominantColor( track.image ).then( ( dominantColor ) => {
+						if ( dominantColor && ref._progressBg ) {
+							ref._progressBg.style.backgroundColor =
+								dominantColor;
+						}
+					} );
+				}
+
+				// Create wrapper for the base waveform (50% opacity text-colored bars).
 				const baseWrapper = document.createElement( 'div' );
 				baseWrapper.className = 'wp-block-playlist__waveform-base';
 				const baseContainer = createWaveformContainer( {
@@ -171,29 +197,28 @@ const { state } = store(
 				baseWrapper.appendChild( baseContainer );
 				ref.appendChild( baseWrapper );
 
-				// Create wrapper for the played waveform (background-colored bars).
-				// This layer is clipped to the played portion to show contrasting bars.
-				const playedWrapper = document.createElement( 'div' );
-				playedWrapper.className = 'wp-block-playlist__waveform-played';
-				const playedWaveformColor = colorWithOpacity( bgColor, 0.5 );
-				const playedContainer = createWaveformContainer( {
+				// Create wrapper for the hover waveform (100% opacity text-colored bars).
+				// This layer is clipped to the mouse position to show brighter bars on hover.
+				const hoverWrapper = document.createElement( 'div' );
+				hoverWrapper.className = 'wp-block-playlist__waveform-hover';
+				const hoverContainer = createWaveformContainer( {
 					url: track.url,
 					visualizationStyle,
-					waveformColor: playedWaveformColor,
-					progressColor: playedWaveformColor,
+					waveformColor: textColor,
+					progressColor: textColor,
 					buttonColor: textColor,
 				} );
-				playedWrapper.appendChild( playedContainer );
-				ref.appendChild( playedWrapper );
-				ref._playedWrapper = playedWrapper;
+				hoverWrapper.appendChild( hoverContainer );
+				ref.appendChild( hoverWrapper );
+				ref._hoverWrapper = hoverWrapper;
 
 				// Create base WaveformPlayer instance.
 				const baseInstance = new WaveformPlayer( baseContainer );
 				waveformInstances.set( ref, baseInstance );
 
-				// Create played WaveformPlayer instance.
-				const playedInstance = new WaveformPlayer( playedContainer );
-				playedInstances.set( ref, playedInstance );
+				// Create hover WaveformPlayer instance.
+				const hoverInstance = new WaveformPlayer( hoverContainer );
+				hoverInstances.set( ref, hoverInstance );
 
 				// Apply background color to SVG icons for contrast.
 				const svgPaths = baseContainer.querySelectorAll( 'svg path' );
@@ -201,12 +226,37 @@ const { state } = store(
 					path.style.fill = bgColor;
 				} );
 
-				// Hide the play button in the played layer (we only use the base player's button).
-				const playedPlayBtn =
-					playedContainer.querySelector( '.waveform-btn' );
-				if ( playedPlayBtn ) {
-					playedPlayBtn.style.visibility = 'hidden';
+				// Hide the play button in the hover layer.
+				const hoverPlayBtn =
+					hoverContainer.querySelector( '.waveform-btn' );
+				if ( hoverPlayBtn ) {
+					hoverPlayBtn.style.visibility = 'hidden';
 				}
+
+				// Handle hover events to show/hide the hover waveform.
+				const handleMouseLeave = () => {
+					if ( ref._hoverWrapper ) {
+						ref._hoverWrapper.style.clipPath = 'inset(0 100% 0 0)';
+					}
+				};
+
+				const handleMouseMove = ( event ) => {
+					if ( ref._hoverWrapper ) {
+						const rect = ref.getBoundingClientRect();
+						const hoverPercent =
+							( ( event.clientX - rect.left ) / rect.width ) *
+							100;
+						const clipRight =
+							100 - Math.max( 0, Math.min( 100, hoverPercent ) );
+						ref._hoverWrapper.style.clipPath = `inset(0 ${ clipRight }% 0 0)`;
+					}
+				};
+
+				ref.addEventListener( 'mouseleave', handleMouseLeave );
+				ref.addEventListener( 'mousemove', handleMouseMove );
+
+				// Store handlers for cleanup.
+				ref._hoverHandlers = { handleMouseLeave, handleMouseMove };
 
 				// Listen to WaveformPlayer custom events for progress updates.
 				baseContainer.addEventListener(
@@ -224,16 +274,6 @@ const { state } = store(
 							if ( ref._progressBg ) {
 								ref._progressBg.style.width = `${ progressWidth }px`;
 							}
-
-							// Update played waveform clip-path to match progress.
-							if ( ref._playedWrapper ) {
-								const clipPercent =
-									( ( buttonWidth + progressWidth ) /
-										ref.offsetWidth ) *
-									100;
-								const clipRight = 100 - clipPercent;
-								ref._playedWrapper.style.clipPath = `inset(0 ${ clipRight }% 0 0)`;
-							}
 						}
 					}
 				);
@@ -245,12 +285,9 @@ const { state } = store(
 							detail: { element: ref },
 						} )
 					);
-					// Reset progress background and played waveform clip-path.
+					// Reset progress background.
 					if ( ref._progressBg ) {
 						ref._progressBg.style.width = '0';
-					}
-					if ( ref._playedWrapper ) {
-						ref._playedWrapper.style.clipPath = 'inset(0 100% 0 0)';
 					}
 				} );
 

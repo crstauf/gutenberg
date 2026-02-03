@@ -62,21 +62,21 @@
 		}
 	}
 
-	// Progress background layer (solid color behind played portion).
+	// Progress background layer (darkened color behind played portion).
+	// Background color is set directly by JS (already darkened).
 	.wp-block-playlist__waveform-progress {
 		position: absolute;
 		top: 0;
 		left: 60px;
 		width: 0;
 		height: 100%;
-		background-color: currentColor;
 		pointer-events: none;
 		z-index: 0;
 	}
 
 	// Base and hover waveform layers share common positioning.
 	.wp-block-playlist__waveform-base,
-	.wp-block-playlist__waveform-played {
+	.wp-block-playlist__waveform-hover {
 		position: absolute;
 		top: 0;
 		left: 0;
@@ -95,13 +95,13 @@
 		}
 	}
 
-	// Base waveform layer (text-colored bars for unplayed area).
+	// Base waveform layer (50% opacity text-colored bars).
 	.wp-block-playlist__waveform-base {
 		z-index: 1;
 	}
 
-	// Played waveform layer (background-colored bars, clipped to played area).
-	.wp-block-playlist__waveform-played {
+	// Hover waveform layer (100% opacity text-colored bars, clipped to mouse position).
+	.wp-block-playlist__waveform-hover {
 		clip-path: inset(0 100% 0 0);
 		pointer-events: none;
 		z-index: 2;
@@ -111,6 +111,7 @@
 			visibility: hidden;
 		}
 	}
+
 
 	// WaveformPlayer component styles - duplicated here to ensure they apply
 	// in the editor iframe where the JS-imported CSS doesn't load.

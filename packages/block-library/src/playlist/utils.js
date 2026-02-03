@@ -42,6 +42,90 @@ export function getEffectiveBackgroundColor( element ) {
 }
 
 /**
+ * Darken a color by mixing it with black.
+ *
+ * @param {string} color  - The color string (rgb or rgba format).
+ * @param {number} amount - The amount to darken (0-1, where 1 is fully black).
+ * @return {string} The darkened color as an rgb() string.
+ */
+export function darkenColor( color, amount = 0.5 ) {
+	// Parse rgb/rgba values.
+	const match = color.match( /rgba?\((\d+),\s*(\d+),\s*(\d+)/ );
+	if ( ! match ) {
+		return color;
+	}
+
+	const r = Math.round( parseInt( match[ 1 ], 10 ) * ( 1 - amount ) );
+	const g = Math.round( parseInt( match[ 2 ], 10 ) * ( 1 - amount ) );
+	const b = Math.round( parseInt( match[ 3 ], 10 ) * ( 1 - amount ) );
+
+	return `rgb(${ r }, ${ g }, ${ b })`;
+}
+
+/**
+ * Extract the dominant color from an image URL using canvas sampling.
+ *
+ * @param {string} imageUrl - The URL of the image to analyze.
+ * @return {Promise<string|null>} The dominant color as an rgb() string, or null if extraction fails.
+ */
+export function getDominantColor( imageUrl ) {
+	return new Promise( ( resolve ) => {
+		if ( ! imageUrl ) {
+			resolve( null );
+			return;
+		}
+
+		const img = new window.Image();
+		img.crossOrigin = 'anonymous';
+
+		img.onload = () => {
+			try {
+				const canvas = document.createElement( 'canvas' );
+				const ctx = canvas.getContext( '2d' );
+
+				// Use a small size for performance.
+				const size = 50;
+				canvas.width = size;
+				canvas.height = size;
+
+				ctx.drawImage( img, 0, 0, size, size );
+				const imageData = ctx.getImageData( 0, 0, size, size ).data;
+
+				// Calculate average color.
+				let r = 0,
+					g = 0,
+					b = 0,
+					count = 0;
+
+				for ( let i = 0; i < imageData.length; i += 4 ) {
+					r += imageData[ i ];
+					g += imageData[ i + 1 ];
+					b += imageData[ i + 2 ];
+					count++;
+				}
+
+				if ( count > 0 ) {
+					r = Math.round( r / count );
+					g = Math.round( g / count );
+					b = Math.round( b / count );
+					resolve( `rgb(${ r }, ${ g }, ${ b })` );
+				} else {
+					resolve( null );
+				}
+			} catch ( e ) {
+				resolve( null );
+			}
+		};
+
+		img.onerror = () => {
+			resolve( null );
+		};
+
+		img.src = imageUrl;
+	} );
+}
+
+/**
  * Create a waveform container element with the specified attributes.
  *
  * @param {Object} options                    - The options for the container.
