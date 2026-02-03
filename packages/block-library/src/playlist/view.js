@@ -16,6 +16,8 @@ import {
 	colorWithOpacity,
 	getEffectiveBackgroundColor,
 	getDominantColor,
+	darkenColor,
+	mixColors,
 	createWaveformContainer,
 } from './utils';
 
@@ -166,20 +168,24 @@ const { state } = store(
 				// Store the button width for progress calculations.
 				const buttonWidth = 60;
 
-				// Create progress background layer (darkened background behind played portion).
+				// Create progress background layer (colored background behind played portion).
 				const progressBg = document.createElement( 'div' );
 				progressBg.className = 'wp-block-playlist__waveform-progress';
-				// Default to page background color.
-				progressBg.style.backgroundColor = bgColor;
+				// Default to darkened background color if no album art.
+				progressBg.style.backgroundColor = darkenColor( bgColor, 0.5 );
 				ref.appendChild( progressBg );
 				ref._progressBg = progressBg;
 
-				// Try to extract dominant color from album art.
+				// Try to extract dominant color from album art and mix with background.
 				if ( track.image ) {
 					getDominantColor( track.image ).then( ( dominantColor ) => {
 						if ( dominantColor && ref._progressBg ) {
-							ref._progressBg.style.backgroundColor =
-								dominantColor;
+							// Mix album color with background for contrast with bars.
+							ref._progressBg.style.backgroundColor = mixColors(
+								dominantColor,
+								bgColor,
+								0.5
+							);
 						}
 					} );
 				}
