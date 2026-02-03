@@ -3,6 +3,11 @@
  */
 
 /**
+ * Width of the waveform player button in pixels.
+ */
+export const WAVEFORM_BUTTON_WIDTH = 60;
+
+/**
  * Convert an rgb/rgba color string to rgba with a specific opacity.
  *
  * @param {string} color   - The color string (rgb or rgba format).
@@ -91,85 +96,6 @@ export function mixColors( color1, color2, ratio = 0.5 ) {
 	const b = Math.round( b1 + ( b2 - b1 ) * ratio );
 
 	return `rgb(${ r }, ${ g }, ${ b })`;
-}
-
-/**
- * Increase the saturation of a color.
- *
- * @param {string} color  - The color string (rgb or rgba format).
- * @param {number} amount - The amount to increase saturation (e.g., 1.5 = 50% more saturated).
- * @return {string} The saturated color as an rgb() string.
- */
-export function saturateColor( color, amount = 1.5 ) {
-	// Parse rgb/rgba values.
-	const match = color.match( /rgba?\((\d+),\s*(\d+),\s*(\d+)/ );
-	if ( ! match ) {
-		return color;
-	}
-
-	let r = parseInt( match[ 1 ], 10 ) / 255;
-	let g = parseInt( match[ 2 ], 10 ) / 255;
-	let b = parseInt( match[ 3 ], 10 ) / 255;
-
-	// Convert RGB to HSL.
-	const max = Math.max( r, g, b );
-	const min = Math.min( r, g, b );
-	let h, s;
-	const l = ( max + min ) / 2;
-
-	if ( max === min ) {
-		h = s = 0; // Achromatic.
-	} else {
-		const d = max - min;
-		s = l > 0.5 ? d / ( 2 - max - min ) : d / ( max + min );
-		switch ( max ) {
-			case r:
-				h = ( ( g - b ) / d + ( g < b ? 6 : 0 ) ) / 6;
-				break;
-			case g:
-				h = ( ( b - r ) / d + 2 ) / 6;
-				break;
-			case b:
-				h = ( ( r - g ) / d + 4 ) / 6;
-				break;
-		}
-	}
-
-	// Increase saturation.
-	s = Math.min( 1, s * amount );
-
-	// Convert HSL back to RGB.
-	if ( s === 0 ) {
-		r = g = b = l;
-	} else {
-		const hue2rgb = ( p, q, t ) => {
-			if ( t < 0 ) {
-				t += 1;
-			}
-			if ( t > 1 ) {
-				t -= 1;
-			}
-			if ( t < 1 / 6 ) {
-				return p + ( q - p ) * 6 * t;
-			}
-			if ( t < 1 / 2 ) {
-				return q;
-			}
-			if ( t < 2 / 3 ) {
-				return p + ( q - p ) * ( 2 / 3 - t ) * 6;
-			}
-			return p;
-		};
-		const q = l < 0.5 ? l * ( 1 + s ) : l + s - l * s;
-		const p = 2 * l - q;
-		r = hue2rgb( p, q, h + 1 / 3 );
-		g = hue2rgb( p, q, h );
-		b = hue2rgb( p, q, h - 1 / 3 );
-	}
-
-	return `rgb(${ Math.round( r * 255 ) }, ${ Math.round(
-		g * 255
-	) }, ${ Math.round( b * 255 ) })`;
 }
 
 /**

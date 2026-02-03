@@ -41,9 +41,30 @@ import { createBlock } from '@wordpress/blocks';
  */
 import { Caption } from '../utils/caption';
 import { useToolsPanelDropdownMenuProps } from '../utils/hooks';
-import { colorWithOpacity, getEffectiveBackgroundColor } from './utils';
+import {
+	colorWithOpacity,
+	getEffectiveBackgroundColor,
+	darkenColor,
+	mixColors,
+	getDominantColor,
+	createWaveformContainer,
+	WAVEFORM_BUTTON_WIDTH,
+} from './utils';
 
 const ALLOWED_MEDIA_TYPES = [ 'audio' ];
+
+/**
+ * Log warnings in development mode only.
+ *
+ * @param {string} message - The warning message.
+ * @param {Error}  error   - The error object.
+ */
+function logWarning( message, error ) {
+	if ( process.env.NODE_ENV === 'development' ) {
+		// eslint-disable-next-line no-console
+		console.warn( `[Playlist Block] ${ message }`, error );
+	}
+}
 
 const CurrentTrack = ( {
 	track,
@@ -53,6 +74,7 @@ const CurrentTrack = ( {
 } ) => {
 	const waveformRef = useRef( null );
 	const waveformInstanceRef = useRef( null );
+	const hoverInstanceRef = useRef( null );
 
 	/**
 	 * dangerouslySetInnerHTML and safeHTML are used because
@@ -99,76 +121,220 @@ const CurrentTrack = ( {
 	}
 
 	// Initialize WaveformPlayer when track changes.
+	// Uses 2 instances like the frontend: base (30% opacity) + hover (100% opacity).
 	useEffect( () => {
 		const currentElement = waveformRef.current;
 		if ( ! currentElement || ! track?.src ) {
 			return;
 		}
 
-		// Set the data attributes before creating the player.
-		currentElement.setAttribute( 'data-url', track.src );
-		currentElement.setAttribute(
-			'data-waveform-style',
-			visualizationStyle || 'bars'
-		);
 		// Get the text and background colors for styling.
 		const textColor = window.getComputedStyle( currentElement ).color;
 		const bgColor = getEffectiveBackgroundColor( currentElement );
-		// Convert rgb to rgba with different opacities using shared utility.
-		const waveformColor = colorWithOpacity( textColor, 0.3 );
-		const progressBgColor = colorWithOpacity( textColor, 0.1 );
-		// Use bgColor at 50% for played bars so they contrast with progress background.
-		const progressColor = colorWithOpacity( bgColor, 0.5 );
-		currentElement.setAttribute( 'data-waveform-color', waveformColor );
-		currentElement.setAttribute( 'data-progress-color', progressColor );
-		currentElement.setAttribute(
-			'data-progress-background-color',
-			progressBgColor
-		);
-		currentElement.setAttribute( 'data-button-color', textColor );
+		const baseWaveformColor = colorWithOpacity( textColor, 0.3 );
+		const style = visualizationStyle || 'bars';
 
-		// Destroy existing instance if any.
+		// Store the current track URL for race condition detection.
+		const currentTrackUrl = track.src;
+
+		// Destroy existing instances if any.
 		if ( waveformInstanceRef.current?.destroy ) {
 			try {
 				waveformInstanceRef.current.destroy();
 			} catch ( e ) {
-				// Ignore errors during cleanup.
+				logWarning( 'Error destroying waveform instance:', e );
+			}
+		}
+		if ( hoverInstanceRef.current?.destroy ) {
+			try {
+				hoverInstanceRef.current.destroy();
+			} catch ( e ) {
+				logWarning( 'Error destroying hover waveform instance:', e );
 			}
 		}
 
 		// Clear any leftover DOM elements from previous player.
 		currentElement.innerHTML = '';
 
-		// Create new WaveformPlayer instance.
-		const instance = new WaveformPlayer( currentElement );
-		waveformInstanceRef.current = instance;
+		// Create progress background layer.
+		const progressBg = document.createElement( 'div' );
+		progressBg.className = 'wp-block-playlist__waveform-progress';
+		progressBg.style.backgroundColor = darkenColor( bgColor, 0.5 );
+		currentElement.appendChild( progressBg );
 
-		// Apply background color to the SVG icons for contrast.
-		const svgPaths = currentElement.querySelectorAll( 'svg path' );
+		// Try to extract dominant color from album art.
+		if ( track?.image ) {
+			getDominantColor( track.image ).then( ( dominantColor ) => {
+				// Check if track hasn't changed while we were extracting the color.
+				if (
+					dominantColor &&
+					currentElement._progressBg &&
+					currentElement._trackUrl === currentTrackUrl
+				) {
+					currentElement._progressBg.style.backgroundColor =
+						mixColors( dominantColor, bgColor, 0.5 );
+				}
+			} );
+		}
+
+		// Store references for cleanup and race condition detection.
+		currentElement._progressBg = progressBg;
+		currentElement._trackUrl = currentTrackUrl;
+
+		// Create base waveform layer (30% opacity bars).
+		const baseWrapper = document.createElement( 'div' );
+		baseWrapper.className = 'wp-block-playlist__waveform-base';
+		const baseContainer = createWaveformContainer( {
+			url: track.src,
+			visualizationStyle: style,
+			waveformColor: baseWaveformColor,
+			progressColor: baseWaveformColor,
+			buttonColor: textColor,
+		} );
+		baseWrapper.appendChild( baseContainer );
+		currentElement.appendChild( baseWrapper );
+
+		// Create hover waveform layer (100% opacity bars).
+		const hoverWrapper = document.createElement( 'div' );
+		hoverWrapper.className = 'wp-block-playlist__waveform-hover';
+		const hoverContainer = createWaveformContainer( {
+			url: track.src,
+			visualizationStyle: style,
+			waveformColor: textColor,
+			progressColor: textColor,
+			buttonColor: textColor,
+		} );
+		hoverWrapper.appendChild( hoverContainer );
+		currentElement.appendChild( hoverWrapper );
+		currentElement._hoverWrapper = hoverWrapper;
+
+		// Create WaveformPlayer instances.
+		const baseInstance = new WaveformPlayer( baseContainer );
+		waveformInstanceRef.current = baseInstance;
+
+		const hoverInstance = new WaveformPlayer( hoverContainer );
+		hoverInstanceRef.current = hoverInstance;
+
+		// Apply background color to SVG icons for contrast.
+		const svgPaths = baseContainer.querySelectorAll( 'svg path' );
 		svgPaths.forEach( ( path ) => {
 			path.style.fill = bgColor;
 		} );
 
-		// Get the audio element created by WaveformPlayer.
-		const audio = currentElement.querySelector( 'audio' );
-		if ( audio ) {
-			audio.addEventListener( 'ended', onTrackEnd );
+		// Hide the play button in the hover layer.
+		const hoverPlayBtn = hoverContainer.querySelector( '.waveform-btn' );
+		if ( hoverPlayBtn ) {
+			hoverPlayBtn.style.visibility = 'hidden';
 		}
 
-		return () => {
-			if ( audio ) {
-				audio.removeEventListener( 'ended', onTrackEnd );
+		// Handle hover events.
+		const handleMouseLeave = () => {
+			if ( currentElement._hoverWrapper ) {
+				currentElement._hoverWrapper.style.clipPath =
+					'inset(0 100% 0 0)';
 			}
+		};
+
+		const handleMouseMove = ( event ) => {
+			if ( currentElement._hoverWrapper ) {
+				const rect = currentElement.getBoundingClientRect();
+				const hoverPercent =
+					( ( event.clientX - rect.left ) / rect.width ) * 100;
+				const clipRight =
+					100 - Math.max( 0, Math.min( 100, hoverPercent ) );
+				currentElement._hoverWrapper.style.clipPath = `inset(0 ${ clipRight }% 0 0)`;
+			}
+		};
+
+		currentElement.addEventListener( 'mouseleave', handleMouseLeave );
+		currentElement.addEventListener( 'mousemove', handleMouseMove );
+		currentElement._hoverHandlers = { handleMouseLeave, handleMouseMove };
+
+		// Handle progress updates.
+		const handleTimeUpdate = ( event ) => {
+			if ( event.detail?.duration && currentElement._progressBg ) {
+				const progress =
+					event.detail.currentTime / event.detail.duration;
+				const trackWidth =
+					currentElement.offsetWidth - WAVEFORM_BUTTON_WIDTH;
+				const progressWidth = progress * trackWidth;
+				currentElement._progressBg.style.width = `${ progressWidth }px`;
+			}
+		};
+
+		const handleEnded = () => {
+			if ( currentElement._progressBg ) {
+				currentElement._progressBg.style.width = '0';
+			}
+			onTrackEnd();
+		};
+
+		baseContainer.addEventListener(
+			'waveformplayer:timeupdate',
+			handleTimeUpdate
+		);
+		baseContainer.addEventListener( 'waveformplayer:ended', handleEnded );
+
+		// Store for cleanup.
+		currentElement._baseContainer = baseContainer;
+		currentElement._eventHandlers = { handleTimeUpdate, handleEnded };
+
+		return () => {
+			// Clean up hover handlers.
+			if ( currentElement._hoverHandlers ) {
+				currentElement.removeEventListener(
+					'mouseleave',
+					currentElement._hoverHandlers.handleMouseLeave
+				);
+				currentElement.removeEventListener(
+					'mousemove',
+					currentElement._hoverHandlers.handleMouseMove
+				);
+			}
+
+			// Clean up event listeners.
+			if (
+				currentElement._baseContainer &&
+				currentElement._eventHandlers
+			) {
+				currentElement._baseContainer.removeEventListener(
+					'waveformplayer:timeupdate',
+					currentElement._eventHandlers.handleTimeUpdate
+				);
+				currentElement._baseContainer.removeEventListener(
+					'waveformplayer:ended',
+					currentElement._eventHandlers.handleEnded
+				);
+			}
+
+			// Destroy instances.
 			if ( waveformInstanceRef.current?.destroy ) {
 				try {
 					waveformInstanceRef.current.destroy();
 				} catch ( e ) {
-					// Ignore errors during cleanup.
+					logWarning( 'Error destroying waveform instance:', e );
+				}
+			}
+			if ( hoverInstanceRef.current?.destroy ) {
+				try {
+					hoverInstanceRef.current.destroy();
+				} catch ( e ) {
+					logWarning(
+						'Error destroying hover waveform instance:',
+						e
+					);
 				}
 			}
 			waveformInstanceRef.current = null;
+			hoverInstanceRef.current = null;
 		};
-	}, [ track?.src, track?.uniqueId, visualizationStyle, onTrackEnd ] );
+	}, [
+		track?.src,
+		track?.uniqueId,
+		track?.image,
+		visualizationStyle,
+		onTrackEnd,
+	] );
 
 	return (
 		<>

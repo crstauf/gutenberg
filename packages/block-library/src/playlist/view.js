@@ -19,6 +19,7 @@ import {
 	darkenColor,
 	mixColors,
 	createWaveformContainer,
+	WAVEFORM_BUTTON_WIDTH,
 } from './utils';
 
 /**
@@ -31,6 +32,24 @@ const hoverInstances = new Map();
  * Track the last URL we initialized for each element to detect track changes.
  */
 const lastInitializedUrl = new Map();
+
+/**
+ * Store event listener references for proper cleanup.
+ */
+const eventListeners = new Map();
+
+/**
+ * Log warnings in development mode only.
+ *
+ * @param {string} message - The warning message.
+ * @param {Error}  error   - The error object.
+ */
+function logWarning( message, error ) {
+	if ( process.env.NODE_ENV === 'development' ) {
+		// eslint-disable-next-line no-console
+		console.warn( `[Playlist Block] ${ message }`, error );
+	}
+}
 
 const { state } = store(
 	'core/playlist',
@@ -128,13 +147,48 @@ const { state } = store(
 					delete ref._hoverHandlers;
 				}
 
+				// Clean up keyboard handler.
+				if ( ref._playBtn && ref._keyboardHandler ) {
+					ref._playBtn.removeEventListener(
+						'keydown',
+						ref._keyboardHandler
+					);
+					delete ref._keyboardHandler;
+					delete ref._playBtn;
+				}
+
+				// Clean up any existing event listeners on baseContainer.
+				const existingListeners = eventListeners.get( ref );
+				if ( existingListeners ) {
+					const { container, handlers } = existingListeners;
+					if ( container && handlers ) {
+						container.removeEventListener(
+							'waveformplayer:timeupdate',
+							handlers.timeupdate
+						);
+						container.removeEventListener(
+							'waveformplayer:ended',
+							handlers.ended
+						);
+						container.removeEventListener(
+							'waveformplayer:play',
+							handlers.play
+						);
+						container.removeEventListener(
+							'waveformplayer:pause',
+							handlers.pause
+						);
+					}
+					eventListeners.delete( ref );
+				}
+
 				// Always clean up any existing player content first.
 				const existingInstance = waveformInstances.get( ref );
 				if ( existingInstance?.destroy ) {
 					try {
 						existingInstance.destroy();
 					} catch ( e ) {
-						// Ignore errors during cleanup.
+						logWarning( 'Error destroying waveform instance:', e );
 					}
 					waveformInstances.delete( ref );
 				}
@@ -144,7 +198,10 @@ const { state } = store(
 					try {
 						existingHoverInstance.destroy();
 					} catch ( e ) {
-						// Ignore errors during cleanup.
+						logWarning(
+							'Error destroying hover waveform instance:',
+							e
+						);
 					}
 					hoverInstances.delete( ref );
 				}
@@ -165,8 +222,8 @@ const { state } = store(
 				const visualizationStyle =
 					ref.getAttribute( 'data-waveform-style' ) || 'bars';
 
-				// Store the button width for progress calculations.
-				const buttonWidth = 60;
+				// Store the current track URL for race condition detection.
+				const currentTrackUrl = track.url;
 
 				// Create progress background layer (colored background behind played portion).
 				const progressBg = document.createElement( 'div' );
@@ -179,7 +236,12 @@ const { state } = store(
 				// Try to extract dominant color from album art and mix with background.
 				if ( track.image ) {
 					getDominantColor( track.image ).then( ( dominantColor ) => {
-						if ( dominantColor && ref._progressBg ) {
+						// Check if track hasn't changed while we were extracting the color.
+						if (
+							dominantColor &&
+							ref._progressBg &&
+							lastInitializedUrl.get( ref ) === currentTrackUrl
+						) {
 							// Mix album color with background for contrast with bars.
 							ref._progressBg.style.backgroundColor = mixColors(
 								dominantColor,
@@ -232,11 +294,54 @@ const { state } = store(
 					path.style.fill = bgColor;
 				} );
 
+				// Enhance play button accessibility.
+				const playBtn = baseContainer.querySelector( '.waveform-btn' );
+				if ( playBtn ) {
+					playBtn.setAttribute(
+						'aria-label',
+						track.ariaLabel || track.title || 'Play'
+					);
+					playBtn.setAttribute( 'role', 'button' );
+
+					// Add keyboard support for seeking.
+					const handleKeyDown = ( event ) => {
+						const audio = baseContainer.querySelector( 'audio' );
+						if ( ! audio ) {
+							return;
+						}
+
+						const seekAmount = 5; // Seconds to seek.
+						switch ( event.key ) {
+							case 'ArrowLeft':
+								event.preventDefault();
+								audio.currentTime = Math.max(
+									0,
+									audio.currentTime - seekAmount
+								);
+								break;
+							case 'ArrowRight':
+								event.preventDefault();
+								audio.currentTime = Math.min(
+									audio.duration,
+									audio.currentTime + seekAmount
+								);
+								break;
+						}
+					};
+
+					playBtn.addEventListener( 'keydown', handleKeyDown );
+					ref._keyboardHandler = handleKeyDown;
+					ref._playBtn = playBtn;
+				}
+
 				// Hide the play button in the hover layer.
 				const hoverPlayBtn =
 					hoverContainer.querySelector( '.waveform-btn' );
 				if ( hoverPlayBtn ) {
 					hoverPlayBtn.style.visibility = 'hidden';
+					// Also remove from tab order since it's just visual.
+					hoverPlayBtn.setAttribute( 'tabindex', '-1' );
+					hoverPlayBtn.setAttribute( 'aria-hidden', 'true' );
 				}
 
 				// Handle hover events to show/hide the hover waveform.
@@ -264,27 +369,24 @@ const { state } = store(
 				// Store handlers for cleanup.
 				ref._hoverHandlers = { handleMouseLeave, handleMouseMove };
 
-				// Listen to WaveformPlayer custom events for progress updates.
-				baseContainer.addEventListener(
-					'waveformplayer:timeupdate',
-					( event ) => {
-						if ( event.detail?.duration ) {
-							const progress =
-								event.detail.currentTime /
-								event.detail.duration;
-							// Calculate width based on track area (excluding button).
-							const trackWidth = ref.offsetWidth - buttonWidth;
-							const progressWidth = progress * trackWidth;
+				// Create event handlers for WaveformPlayer events.
+				const handleTimeUpdate = ( event ) => {
+					if ( event.detail?.duration ) {
+						const progress =
+							event.detail.currentTime / event.detail.duration;
+						// Calculate width based on track area (excluding button).
+						const trackWidth =
+							ref.offsetWidth - WAVEFORM_BUTTON_WIDTH;
+						const progressWidth = progress * trackWidth;
 
-							// Update progress background width.
-							if ( ref._progressBg ) {
-								ref._progressBg.style.width = `${ progressWidth }px`;
-							}
+						// Update progress background width.
+						if ( ref._progressBg ) {
+							ref._progressBg.style.width = `${ progressWidth }px`;
 						}
 					}
-				);
+				};
 
-				baseContainer.addEventListener( 'waveformplayer:ended', () => {
+				const handleEnded = () => {
 					ref.dispatchEvent(
 						new CustomEvent( 'waveform-ended', {
 							bubbles: true,
@@ -295,24 +397,53 @@ const { state } = store(
 					if ( ref._progressBg ) {
 						ref._progressBg.style.width = '0';
 					}
-				} );
+				};
 
-				baseContainer.addEventListener( 'waveformplayer:play', () => {
+				const handlePlay = () => {
 					ref.dispatchEvent(
 						new CustomEvent( 'waveform-play', {
 							bubbles: true,
 							detail: { element: ref },
 						} )
 					);
-				} );
+				};
 
-				baseContainer.addEventListener( 'waveformplayer:pause', () => {
+				const handlePause = () => {
 					ref.dispatchEvent(
 						new CustomEvent( 'waveform-pause', {
 							bubbles: true,
 							detail: { element: ref },
 						} )
 					);
+				};
+
+				// Add event listeners.
+				baseContainer.addEventListener(
+					'waveformplayer:timeupdate',
+					handleTimeUpdate
+				);
+				baseContainer.addEventListener(
+					'waveformplayer:ended',
+					handleEnded
+				);
+				baseContainer.addEventListener(
+					'waveformplayer:play',
+					handlePlay
+				);
+				baseContainer.addEventListener(
+					'waveformplayer:pause',
+					handlePause
+				);
+
+				// Store references for cleanup.
+				eventListeners.set( ref, {
+					container: baseContainer,
+					handlers: {
+						timeupdate: handleTimeUpdate,
+						ended: handleEnded,
+						play: handlePlay,
+						pause: handlePause,
+					},
 				} );
 
 				// Auto-play if the context says we should be playing.

@@ -1,5 +1,8 @@
 @use "@wordpress/base-styles/variables" as *;
 
+// Waveform button dimensions - keep in sync with WAVEFORM_BUTTON_WIDTH in utils.js.
+$waveform-button-size: 60px;
+
 .wp-block-playlist {
 	padding: $grid-unit-20;
 
@@ -51,7 +54,7 @@
 		margin-bottom: $grid-unit-20;
 		position: relative;
 		// Fixed height to match WaveformPlayer default.
-		height: 60px;
+		height: $waveform-button-size;
 		overflow: hidden;
 
 		// Style the audio element inside WaveformPlayer.
@@ -65,7 +68,7 @@
 	.wp-block-playlist__waveform-progress {
 		position: absolute;
 		top: 0;
-		left: 60px;
+		left: $waveform-button-size;
 		width: 0;
 		height: 100%;
 		pointer-events: none;
@@ -144,11 +147,26 @@
 		border-radius: 0;
 		border-end-start-radius: 0.125rem;
 		border-start-start-radius: 0.125rem;
-		width: 60px;
-		height: 60px;
-		min-width: 60px;
+		width: $waveform-button-size;
+		height: $waveform-button-size;
+		min-width: $waveform-button-size;
 		background: currentColor;
 		margin: 0;
+
+		// Focus styles for keyboard accessibility.
+		&:focus {
+			outline: 2px solid currentColor;
+			outline-offset: 2px;
+		}
+
+		&:focus:not(:focus-visible) {
+			outline: none;
+		}
+
+		&:focus-visible {
+			outline: 2px solid currentColor;
+			outline-offset: 2px;
+		}
 	}
 
 	.waveform-track.waveform-align-bottom .waveform-btn {
