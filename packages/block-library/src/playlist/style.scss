@@ -62,8 +62,8 @@
 		}
 	}
 
-	// Progress background layer (darkened color behind played portion).
-	// Background color is set directly by JS (already darkened).
+	// Progress background layer (color behind played portion).
+	// Background color is set directly by JS from album art.
 	.wp-block-playlist__waveform-progress {
 		position: absolute;
 		top: 0;
@@ -72,6 +72,7 @@
 		height: 100%;
 		pointer-events: none;
 		z-index: 0;
+		opacity: 0.5;
 	}
 
 	// Base and hover waveform layers share common positioning.
@@ -95,7 +96,7 @@
 		}
 	}
 
-	// Base waveform layer (50% opacity text-colored bars).
+	// Base waveform layer (30% opacity text-colored bars).
 	.wp-block-playlist__waveform-base {
 		z-index: 1;
 	}

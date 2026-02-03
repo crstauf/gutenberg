@@ -159,7 +159,7 @@ const { state } = store(
 				// Get colors for styling.
 				const textColor = window.getComputedStyle( ref ).color;
 				const bgColor = getEffectiveBackgroundColor( ref );
-				const baseWaveformColor = colorWithOpacity( textColor, 0.5 );
+				const baseWaveformColor = colorWithOpacity( textColor, 0.3 );
 				const visualizationStyle =
 					ref.getAttribute( 'data-waveform-style' ) || 'bars';
 
@@ -184,7 +184,7 @@ const { state } = store(
 					} );
 				}
 
-				// Create wrapper for the base waveform (50% opacity text-colored bars).
+				// Create wrapper for the base waveform (30% opacity text-colored bars).
 				const baseWrapper = document.createElement( 'div' );
 				baseWrapper.className = 'wp-block-playlist__waveform-base';
 				const baseContainer = createWaveformContainer( {
