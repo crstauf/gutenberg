@@ -11,6 +11,7 @@ import {
 	useCallback,
 	useContext,
 	useEffect,
+	useLayoutEffect,
 	useMemo,
 	useRef,
 	useState,
@@ -169,6 +170,12 @@ function DataViews< Item >( {
 	const containerRef = useRef< HTMLDivElement | null >( null );
 	const [ containerWidth, setContainerWidth ] = useState( 0 );
 	const isLoadingRef = useRef( false );
+	// Track scroll position for preservation when prepending items
+	const scrollPreservationRef = useRef< {
+		scrollHeight: number;
+		scrollTop: number;
+		isPending: boolean;
+	} >( { scrollHeight: 0, scrollTop: 0, isPending: false } );
 	const resizeObserverRef = useResizeObserver(
 		( resizeObserverEntries: any ) => {
 			setContainerWidth(
@@ -263,6 +270,27 @@ function DataViews< Item >( {
 		}
 	}, [ hasPrimaryOrLockedFilters, isShowingFilter ] );
 
+	// Preserve scroll position when new items are prepended (scroll up loading)
+	useLayoutEffect( () => {
+		const container = containerRef.current;
+		if (
+			! container ||
+			! view.infiniteScrollEnabled ||
+			! scrollPreservationRef.current.isPending
+		) {
+			return;
+		}
+
+		// Calculate the height difference and adjust scroll position
+		const heightDiff =
+			container.scrollHeight - scrollPreservationRef.current.scrollHeight;
+		if ( heightDiff > 0 ) {
+			container.scrollTop =
+				scrollPreservationRef.current.scrollTop + heightDiff;
+		}
+		scrollPreservationRef.current.isPending = false;
+	}, [ displayData, view.infiniteScrollEnabled ] );
+
 	// Attach scroll event listener for infinite scroll
 	useEffect( () => {
 		if ( ! view.infiniteScrollEnabled || ! containerRef.current ) {
@@ -270,6 +298,9 @@ function DataViews< Item >( {
 		}
 
 		let lastScrollTop = 0;
+		// Use larger thresholds to trigger loading earlier during fast scrolling
+		const BOTTOM_THRESHOLD = 600; // px from bottom to trigger load
+		const TOP_THRESHOLD = 800; // px from top to trigger load
 
 		const handleScroll = throttle( ( event: unknown ) => {
 			const target = ( event as Event ).target as HTMLElement;
@@ -294,7 +325,7 @@ function DataViews< Item >( {
 			// Check if user has scrolled near the bottom
 			if (
 				scrollDirection === 'down' &&
-				scrollTop + clientHeight >= scrollHeight - 300
+				scrollTop + clientHeight >= scrollHeight - BOTTOM_THRESHOLD
 			) {
 				// Check if there's more data to load
 				if ( currentEndPosition < paginationInfo.totalItems ) {
@@ -314,10 +345,18 @@ function DataViews< Item >( {
 			}
 
 			// Check if user has scrolled near the top
-			if ( scrollDirection === 'up' && scrollTop <= 500 ) {
+			if ( scrollDirection === 'up' && scrollTop <= TOP_THRESHOLD ) {
 				// Check if there's more data to load
 				if ( currentStartPosition > 1 ) {
 					isLoadingRef.current = true;
+
+					// Store current scroll state for position preservation
+					scrollPreservationRef.current = {
+						scrollHeight: target.scrollHeight,
+						scrollTop: target.scrollTop,
+						isPending: true,
+					};
+
 					const newEndPosition = currentStartPosition + 1;
 					const newStartPosition = Math.max(
 						newEndPosition - perPage,
@@ -332,7 +371,7 @@ function DataViews< Item >( {
 					isLoadingRef.current = false;
 				}
 			}
-		}, 100 ); // Throttle to 100ms
+		}, 50 ); // Faster throttle (50ms) for better response to fast scrolling
 
 		const container = containerRef.current;
 		container.addEventListener( 'scroll', handleScroll );
