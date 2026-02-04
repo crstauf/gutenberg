@@ -11,9 +11,12 @@ import {
 	__experimentalHStack as HStack,
 	__experimentalHeading as Heading,
 	Spinner,
+	createSlotFill,
+	Popover,
 } from '@wordpress/components';
 import { useSelect, useDispatch } from '@wordpress/data';
 import { __, sprintf } from '@wordpress/i18n';
+import { useViewportMatch } from '@wordpress/compose';
 
 /**
  * Internal dependencies
@@ -36,6 +39,24 @@ const BLOCKS_WITH_LINK_UI_SUPPORT = [
 	'core/navigation-submenu',
 ];
 const { PrivateListView } = unlock( blockEditorPrivateApis );
+
+// Create private slot-fill for ListViewContentPanel
+const { Fill: ListViewContentPanelFill, Slot: ListViewContentPanelSlot } =
+	createSlotFill( Symbol( 'ListViewContentPanel' ) );
+
+// Hook to determine popover placement for inspector controls
+function useInspectorPopoverPlacement( { isControl } = { isControl: false } ) {
+	const isMobile = useViewportMatch( 'medium', '<' );
+	return ! isMobile
+		? {
+				popoverProps: {
+					placement: 'left-start',
+					// For non-mobile, inner sidebar width (248px) - button width (24px) - border (1px) + padding (16px) + spacing (20px)
+					offset: isControl ? 35 : 259,
+				},
+		  }
+		: {};
+}
 
 function AdditionalBlockContent( { block, insertedBlock, setInsertedBlock } ) {
 	const { updateBlockAttributes, removeBlock } =
@@ -133,6 +154,41 @@ function AdditionalBlockContent( { block, insertedBlock, setInsertedBlock } ) {
 	);
 }
 
+function ListViewContentPanel( { rootClientId } ) {
+	const { hasSelectedChildBlock } = useSelect(
+		( select ) => {
+			const { hasSelectedInnerBlock } = select( blockEditorStore );
+			return {
+				hasSelectedChildBlock: hasSelectedInnerBlock(
+					rootClientId,
+					true /* deep: */
+				),
+			};
+		},
+		[ rootClientId ]
+	);
+
+	const { popoverProps } = useInspectorPopoverPlacement( {
+		isControl: false, // Full-width panel, not a button control
+	} );
+
+	if ( ! hasSelectedChildBlock ) {
+		return null;
+	}
+
+	return (
+		<Popover { ...( popoverProps ?? {} ) }>
+			<ListViewContentPanelSlot />
+		</Popover>
+	);
+}
+
+// Attach Slot to Fill following Gutenberg slot-fill pattern
+ListViewContentPanelFill.Slot = ListViewContentPanel;
+
+// Export the Fill component for use by other components
+export { ListViewContentPanelFill };
+
 const MainContent = ( {
 	clientId,
 	currentMenuId,
@@ -184,6 +240,7 @@ const MainContent = ( {
 				blockSettingsMenu={ LeafMoreMenu }
 				additionalBlockContent={ AdditionalBlockContent }
 			/>
+			<ListViewContentPanel rootClientId={ clientId } />
 		</div>
 	);
 };
