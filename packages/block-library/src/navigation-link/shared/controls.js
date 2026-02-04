@@ -15,6 +15,7 @@ import { __unstableStripHTML as stripHTML } from '@wordpress/dom';
 import {
 	privateApis as blockEditorPrivateApis,
 	store as blockEditorStore,
+	useBlockEditingMode,
 } from '@wordpress/block-editor';
 import { useSelect } from '@wordpress/data';
 import { store as coreStore } from '@wordpress/core-data';
@@ -158,15 +159,7 @@ export function Controls( { attributes, setAttributes, clientId } ) {
 			?.home;
 	}, [] );
 
-	const isInSection = useSelect(
-		( select ) => {
-			const { getParentSectionBlock } = unlock(
-				select( blockEditorStore )
-			);
-			return !! getParentSectionBlock( clientId );
-		},
-		[ clientId ]
-	);
+	const isContentOnly = useBlockEditingMode() === 'contentOnly';
 
 	const preview = useLinkPreview( {
 		url,
@@ -320,7 +313,7 @@ export function Controls( { attributes, setAttributes, clientId } ) {
 				hasValue={ () => !! description }
 				label={ __( 'Description' ) }
 				onDeselect={ () => setAttributes( { description: '' } ) }
-				isShownByDefault={ ! isInSection }
+				isShownByDefault={ ! isContentOnly }
 			>
 				<TextareaControl
 					label={ __( 'Description' ) }
@@ -338,7 +331,7 @@ export function Controls( { attributes, setAttributes, clientId } ) {
 				hasValue={ () => !! rel }
 				label={ __( 'Rel attribute' ) }
 				onDeselect={ () => setAttributes( { rel: '' } ) }
-				isShownByDefault={ ! isInSection }
+				isShownByDefault={ ! isContentOnly }
 			>
 				<TextControl
 					__next40pxDefaultSize
