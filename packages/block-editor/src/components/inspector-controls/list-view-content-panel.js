@@ -39,7 +39,7 @@ function useInspectorPopoverPlacement() {
 }
 
 // Internal Slot component that renders the popover panel
-function ListViewContentPanelSlot() {
+function ListViewContentPanelSlot( { listSlotRef } ) {
 	const { popoverProps } = useInspectorPopoverPlacement();
 	const fills = useSlotFills( LIST_VIEW_CONTENT_PANEL_SLOT );
 	const hasFills = Boolean( fills && fills.length );
@@ -54,18 +54,18 @@ function ListViewContentPanelSlot() {
 	const [ anchorElement, setAnchorElement ] = useState( null );
 
 	useEffect( () => {
-		if ( ! selectedClientId ) {
+		if ( ! selectedClientId || ! listSlotRef?.current ) {
 			setAnchorElement( null );
 			return;
 		}
 
-		// Query for the list view row with the selected block
+		// Query for the list view row within the list slot only
 		// Using the stable data-block attribute and is-selected class
-		const selector = `[role=row][data-block="${ selectedClientId }"].is-selected`;
-		const element = document.querySelector( selector );
+		const selector = `[data-block="${ selectedClientId }"]`;
+		const element = listSlotRef.current.querySelector( selector );
 
 		setAnchorElement( element );
-	}, [ selectedClientId ] );
+	}, [ selectedClientId, listSlotRef ] );
 
 	if ( ! hasFills ) {
 		return null;

@@ -10,6 +10,7 @@ import {
 } from '@wordpress/blocks';
 import { __unstableMotion as motion } from '@wordpress/components';
 import { useSelect } from '@wordpress/data';
+import { useRef } from '@wordpress/element';
 
 /**
  * Internal dependencies
@@ -317,6 +318,7 @@ const BlockInspectorSingleBlock = ( {
 	hasBlockStyles,
 	editedContentOnlySection,
 } ) => {
+	const listSlotRef = useRef( null );
 	const hasMultipleTabs = availableTabs?.length > 1;
 	const hasParentChildBlockCards =
 		editedContentOnlySection &&
@@ -367,8 +369,8 @@ const BlockInspectorSingleBlock = ( {
 					) }
 					<ContentTab contentClientIds={ contentClientIds } />
 					<InspectorControls.Slot group="content" />
-					<InspectorControls.Slot group="list" />
-					<ListViewContentPanelSlot />
+					<InspectorControls.Slot group="list" ref={ listSlotRef } />
+					<ListViewContentPanelSlot listSlotRef={ listSlotRef } />
 					{ ! isSectionBlock && (
 						<StyleInspectorSlots blockName={ blockName } />
 					) }

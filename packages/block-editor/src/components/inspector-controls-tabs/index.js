@@ -32,6 +32,7 @@ export default function InspectorControlsTabs( {
 	isSectionBlock,
 	contentClientIds,
 } ) {
+	const listSlotRef = useRef( null );
 	const showIconLabels = useSelect( ( select ) => {
 		return select( preferencesStore ).get( 'core', 'showIconLabels' );
 	}, [] );
@@ -95,8 +96,8 @@ export default function InspectorControlsTabs( {
 				</Tabs.TabPanel>
 				<Tabs.TabPanel tabId={ TAB_LIST_VIEW.name } focusable={ false }>
 					<ContentTab contentClientIds={ contentClientIds } />
-					<InspectorControls.Slot group="list" />
-					<ListViewContentPanelSlot />
+					<InspectorControls.Slot group="list" ref={ listSlotRef } />
+					<ListViewContentPanelSlot listSlotRef={ listSlotRef } />
 				</Tabs.TabPanel>
 				<Tabs.TabPanel tabId={ TAB_SETTINGS.name } focusable={ false }>
 					<SettingsTab showAdvancedControls={ !! blockName } />
