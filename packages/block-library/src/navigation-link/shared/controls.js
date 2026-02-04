@@ -158,6 +158,16 @@ export function Controls( { attributes, setAttributes, clientId } ) {
 			?.home;
 	}, [] );
 
+	const isInSection = useSelect(
+		( select ) => {
+			const { getParentSectionBlock } = unlock(
+				select( blockEditorStore )
+			);
+			return !! getParentSectionBlock( clientId );
+		},
+		[ clientId ]
+	);
+
 	const preview = useLinkPreview( {
 		url,
 		title: linkTitle,
@@ -310,7 +320,7 @@ export function Controls( { attributes, setAttributes, clientId } ) {
 				hasValue={ () => !! description }
 				label={ __( 'Description' ) }
 				onDeselect={ () => setAttributes( { description: '' } ) }
-				isShownByDefault
+				isShownByDefault={ ! isInSection }
 			>
 				<TextareaControl
 					label={ __( 'Description' ) }
@@ -328,7 +338,7 @@ export function Controls( { attributes, setAttributes, clientId } ) {
 				hasValue={ () => !! rel }
 				label={ __( 'Rel attribute' ) }
 				onDeselect={ () => setAttributes( { rel: '' } ) }
-				isShownByDefault
+				isShownByDefault={ ! isInSection }
 			>
 				<TextControl
 					__next40pxDefaultSize
