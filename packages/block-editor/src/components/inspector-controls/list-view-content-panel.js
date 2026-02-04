@@ -1,7 +1,11 @@
 /**
  * WordPress dependencies
  */
-import { createSlotFill, Popover } from '@wordpress/components';
+import {
+	createSlotFill,
+	Popover,
+	__experimentalUseSlotFills as useSlotFills,
+} from '@wordpress/components';
 import { useContext } from '@wordpress/element';
 import { useViewportMatch } from '@wordpress/compose';
 
@@ -35,6 +39,12 @@ function useInspectorPopoverPlacement() {
 // Internal Slot component that renders the popover panel
 function ListViewContentPanelSlot() {
 	const { popoverProps } = useInspectorPopoverPlacement();
+	const fills = useSlotFills( LIST_VIEW_CONTENT_PANEL_SLOT );
+	const hasFills = Boolean( fills && fills.length );
+
+	if ( ! hasFills ) {
+		return null;
+	}
 
 	return (
 		<Popover { ...( popoverProps ?? {} ) }>
