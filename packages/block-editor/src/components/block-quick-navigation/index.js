@@ -1,4 +1,3 @@
-import { clsx } from 'clsx';
 import { hasBlockSupport } from '@wordpress/blocks';
 import { useSelect, useDispatch } from '@wordpress/data';
 import {
@@ -65,11 +64,10 @@ function BlockQuickNavigationItem( { clientId, onSelect } ) {
 	return (
 		<Button
 			__next40pxDefaultSize
-			className={ clsx( 'block-editor-block-quick-navigation__item', {
-				'has-selected-list-view-block':
-					hasListViewSupport && hasSelectedInnerBlock,
-			} ) }
-			isPressed={ isSelected || hasSelectedInnerBlock }
+			className="block-editor-block-quick-navigation__item"
+			isPressed={
+				isSelected || ( hasSelectedInnerBlock && ! hasListViewSupport )
+			}
 			onClick={ async () => {
 				await selectBlock( clientId );
 				if ( onSelect ) {
