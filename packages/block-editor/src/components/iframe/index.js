@@ -132,7 +132,9 @@ function Iframe( {
 			const doc = node.contentDocument;
 			// If the `contentDocument` doesn't have a body yet, append a new one.
 			if ( ! doc.body ) {
-				doc.documentElement.appendChild( doc.createElement( 'body' ) );
+				const newBody = doc.createElement( 'body' );
+				newBody.className = 'temp';
+				doc.documentElement.appendChild( newBody );
 			}
 			setIframeDocument( doc );
 		};
@@ -281,6 +283,9 @@ function Iframe( {
 		${ styles }
 		${ scripts }
 	</head>
+	<body>
+		<script>document.currentScript.parentElement.remove()</script>
+	</body>
 </html>`;
 
 	const [ src, cleanup ] = useMemo( () => {
