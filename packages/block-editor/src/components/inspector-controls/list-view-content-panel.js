@@ -8,7 +8,7 @@ import {
 } from '@wordpress/components';
 import { useContext, useState, useEffect } from '@wordpress/element';
 import { useViewportMatch } from '@wordpress/compose';
-import { useSelect } from '@wordpress/data';
+import { useSelect, useDispatch } from '@wordpress/data';
 
 /**
  * Internal dependencies
@@ -20,6 +20,7 @@ import {
 	mayDisplayControlsKey,
 } from '../block-edit/context';
 import { store as blockEditorStore } from '../../store';
+import { unlock } from '../../lock-unlock';
 
 // Create private slot-fill for ListViewContentPanel
 const LIST_VIEW_CONTENT_PANEL_SLOT = Symbol( 'ListViewContentPanel' );
@@ -44,10 +45,15 @@ function ListViewContentPanelSlot( { listSlotRef } ) {
 	const fills = useSlotFills( LIST_VIEW_CONTENT_PANEL_SLOT );
 	const hasFills = Boolean( fills && fills.length );
 
-	// Get the first selected block client ID
-	const selectedClientId = useSelect( ( select ) => {
+	// Get both the selected client ID and the popover open state
+	const { selectedClientId, isOpen } = useSelect( ( select ) => {
 		const { getSelectedBlockClientId } = select( blockEditorStore );
-		return getSelectedBlockClientId();
+		const privateSelectors = unlock( select( blockEditorStore ) );
+
+		return {
+			selectedClientId: getSelectedBlockClientId(),
+			isOpen: privateSelectors.isListViewContentPanelOpen(),
+		};
 	}, [] );
 
 	// Query DOM for the selected block row element in List View
@@ -67,7 +73,13 @@ function ListViewContentPanelSlot( { listSlotRef } ) {
 		setAnchorElement( element );
 	}, [ selectedClientId, listSlotRef ] );
 
-	if ( ! hasFills ) {
+	// eslint-disable-next-line @wordpress/no-unused-vars-before-return
+	const { closeListViewContentPanel } = unlock(
+		useDispatch( blockEditorStore )
+	);
+
+	// Only render when explicitly open
+	if ( ! isOpen || ! hasFills || ! anchorElement ) {
 		return null;
 	}
 
@@ -76,6 +88,7 @@ function ListViewContentPanelSlot( { listSlotRef } ) {
 			{ ...( popoverProps ?? {} ) }
 			anchor={ anchorElement }
 			placement="right-start"
+			onClose={ closeListViewContentPanel }
 		>
 			<div style={ { width: '280px' } }>
 				<Slot bubblesVirtually />

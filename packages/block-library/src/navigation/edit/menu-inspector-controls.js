@@ -147,6 +147,10 @@ const MainContent = ( {
 		[ clientId ]
 	);
 
+	const { openListViewContentPanel } = unlock(
+		useDispatch( blockEditorStore )
+	);
+
 	const { navigationMenu } = useNavigationMenu( currentMenuId );
 
 	if ( currentMenuId && isNavigationMenuMissing ) {
@@ -183,6 +187,7 @@ const MainContent = ( {
 				showAppender
 				blockSettingsMenu={ LeafMoreMenu }
 				additionalBlockContent={ AdditionalBlockContent }
+				onSelect={ openListViewContentPanel }
 			/>
 		</div>
 	);

@@ -2102,6 +2102,30 @@ export function insertionPoint( state = null, action ) {
 	return state;
 }
 
+/**
+ * Reducer tracking whether the list view content panel popover is open.
+ *
+ * @param {boolean} state  Current state.
+ * @param {Object}  action Dispatched action.
+ *
+ * @return {boolean} Updated state.
+ */
+export function listViewContentPanelOpen( state = false, action ) {
+	switch ( action.type ) {
+		case 'OPEN_LIST_VIEW_CONTENT_PANEL':
+			return true;
+
+		case 'CLOSE_LIST_VIEW_CONTENT_PANEL':
+			return false;
+
+		// Close when selection is cleared
+		case 'CLEAR_SELECTED_BLOCK':
+			return false;
+	}
+
+	return state;
+}
+
 const combinedReducers = combineReducers( {
 	blocks,
 	isDragging,
@@ -2133,6 +2157,7 @@ const combinedReducers = combineReducers( {
 	registeredInserterMediaCategories,
 	zoomLevel,
 	hasBlockSpotlight,
+	listViewContentPanelOpen,
 } );
 
 /**
