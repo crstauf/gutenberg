@@ -6,42 +6,6 @@ $waveform-button-size: 60px;
 .wp-block-playlist {
 	padding: $grid-unit-20;
 
-	.wp-block-playlist__current-item {
-		display: flex;
-		align-items: center;
-		gap: var(--Spacing-6, 24px);
-		align-self: stretch;
-		padding-bottom: $grid-unit-20;
-		border-bottom: 1px solid color-mix(in srgb, currentColor 20%, transparent);
-		margin-bottom: $grid-unit-20;
-
-		img {
-			border-radius: 2px;
-		}
-
-		div {
-			display: flex;
-			flex-direction: column;
-			align-items: flex-start;
-			gap: 8px;
-		}
-
-		& .wp-block-playlist__current-item-artist-album {
-			flex-direction: row;
-			font-weight: 400;
-			font-size: 16px;
-		}
-
-		.wp-block-playlist__item-title {
-			font-weight: 600;
-			word-break: break-all;
-		}
-
-		.wp-block-playlist__item-album {
-			font-style: italic;
-		}
-	}
-
 	audio {
 		width: 100%;
 		margin-top: 10px;
@@ -113,6 +77,51 @@ $waveform-button-size: 60px;
 		}
 	}
 
+	// Track info overlay on the waveform player.
+	.wp-block-playlist__track-info {
+		position: absolute;
+		top: 0;
+		left: $waveform-button-size;
+		right: 0;
+		bottom: 0;
+		display: flex;
+		flex-direction: column;
+		justify-content: center;
+		padding: 0 $grid-unit-15;
+		pointer-events: none;
+		z-index: 3;
+		gap: 2px;
+		overflow: hidden;
+	}
+
+	.wp-block-playlist__track-info-title {
+		font-weight: 600;
+		font-size: 14px;
+		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		text-shadow:
+			1px 1px 2px rgba(0, 0, 0, 0.5),
+			-1px -1px 2px rgba(255, 255, 255, 0.3);
+	}
+
+	.wp-block-playlist__track-info-meta {
+		display: flex;
+		gap: 8px;
+		font-size: 12px;
+		opacity: 0.85;
+		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		text-shadow:
+			1px 1px 2px rgba(0, 0, 0, 0.5),
+			-1px -1px 2px rgba(255, 255, 255, 0.3);
+	}
+
+	.wp-block-playlist__track-info-album {
+		font-style: italic;
+	}
+
 
 	// WaveformPlayer component styles - duplicated here to ensure they apply
 	// in the editor iframe where the JS-imported CSS doesn't load.
@@ -150,8 +159,38 @@ $waveform-button-size: 60px;
 		width: $waveform-button-size;
 		height: $waveform-button-size;
 		min-width: $waveform-button-size;
-		background: currentColor;
+		background-color: currentColor;
 		margin: 0;
+		position: relative;
+
+		// Semi-transparent overlay for better icon contrast on album art.
+		&::before {
+			content: "";
+			position: absolute;
+			inset: 0;
+			background: rgba(0, 0, 0, 0.3);
+			opacity: 0;
+			transition: opacity 0.2s ease;
+			pointer-events: none;
+			border-end-start-radius: 0.125rem;
+			border-start-start-radius: 0.125rem;
+		}
+
+		// Show overlay and white icon when button has album art background.
+		&[style*="background-image"] {
+			&::before {
+				opacity: 1;
+			}
+
+			svg {
+				position: relative;
+				z-index: 1;
+
+				path {
+					fill: #fff !important;
+				}
+			}
+		}
 
 		// Focus styles for keyboard accessibility.
 		&:focus {

@@ -280,6 +280,24 @@ const { state } = store(
 				ref.appendChild( hoverWrapper );
 				ref._hoverWrapper = hoverWrapper;
 
+				// Create track info overlay.
+				const trackInfo = document.createElement( 'div' );
+				trackInfo.className = 'wp-block-playlist__track-info';
+				trackInfo.innerHTML = `
+					<span class="wp-block-playlist__track-info-title">${
+						track?.title || 'Untitled'
+					}</span>
+					<span class="wp-block-playlist__track-info-meta">
+						<span class="wp-block-playlist__track-info-artist">${
+							track?.artist || 'Unknown artist'
+						}</span>
+						<span class="wp-block-playlist__track-info-album">${
+							track?.album || 'Unknown album'
+						}</span>
+					</span>
+				`;
+				ref.appendChild( trackInfo );
+
 				// Create base WaveformPlayer instance.
 				const baseInstance = new WaveformPlayer( baseContainer );
 				waveformInstances.set( ref, baseInstance );
@@ -294,7 +312,7 @@ const { state } = store(
 					path.style.fill = bgColor;
 				} );
 
-				// Enhance play button accessibility.
+				// Enhance play button accessibility and styling.
 				const playBtn = baseContainer.querySelector( '.waveform-btn' );
 				if ( playBtn ) {
 					playBtn.setAttribute(
@@ -302,6 +320,13 @@ const { state } = store(
 						track.ariaLabel || track.title || 'Play'
 					);
 					playBtn.setAttribute( 'role', 'button' );
+
+					// Use album art as the play button background if available.
+					if ( track.image ) {
+						playBtn.style.backgroundImage = `url(${ track.image })`;
+						playBtn.style.backgroundSize = 'cover';
+						playBtn.style.backgroundPosition = 'center';
+					}
 
 					// Add keyboard support for seeking.
 					const handleKeyDown = ( event ) => {

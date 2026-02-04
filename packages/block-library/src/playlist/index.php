@@ -96,7 +96,7 @@ function render_block_core_playlist( $attributes, $content, $block ) {
 		)
 	);
 
-	// Create the HTML for the current track which shows above the tracklist.
+	// Create the HTML for the waveform player.
 	$visualization_style = isset( $attributes['visualizationStyle'] ) ? $attributes['visualizationStyle'] : 'bars';
 
 	$html = '<div
@@ -108,34 +108,9 @@ function render_block_core_playlist( $attributes, $content, $block ) {
 			data-wp-on-document--waveform-ended="actions.nextSong"
 			data-wp-on-document--waveform-play="actions.isPlaying"
 			data-wp-on-document--waveform-pause="actions.isPaused"
-		></div>
-		<div class="wp-block-playlist__current-item">';
+		></div>';
 
-	// The alt attribute is intentionally left empty, as the image is decorative.
-	if ( isset( $attributes['showImages'] ) ? $attributes['showImages'] : false ) {
-		$html .=
-		'<img
-			class="wp-block-playlist__item-image"
-			alt=""
-			width="70px"
-			height="70px"
-			data-wp-bind--src="state.currentTrack.image"
-			data-wp-bind--hidden="!state.currentTrack.image"
-		/>';
-	}
-
-	$html .= '
-		<div>
-			<span class="wp-block-playlist__item-title" data-wp-text="state.currentTrack.title"></span>
-			<div class="wp-block-playlist__current-item-artist-album">
-				<span class="wp-block-playlist__item-artist" data-wp-text="state.currentTrack.artist"></span>
-				<span class="wp-block-playlist__item-album" data-wp-text="state.currentTrack.album"></span>
-			</div>
-		</div>
-	</div>
-	';
-
-	// Add the HTML for the current track inside the figure.
+	// Add the waveform player HTML inside the figure.
 	$figure = null;
 	preg_match( '/<figure[^>]*>/', $content, $figure );
 	if ( ! empty( $figure[0] ) ) {

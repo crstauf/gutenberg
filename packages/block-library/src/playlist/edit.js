@@ -25,7 +25,6 @@ import {
 	ToggleControl,
 	Disabled,
 	SelectControl,
-	Spinner,
 	__experimentalToolsPanel as ToolsPanel,
 	__experimentalToolsPanelItem as ToolsPanelItem,
 } from '@wordpress/components';
@@ -33,7 +32,7 @@ import { useSelect, useDispatch } from '@wordpress/data';
 import { store as noticesStore } from '@wordpress/notices';
 import { __, _x, sprintf } from '@wordpress/i18n';
 import { audio as icon } from '@wordpress/icons';
-import { safeHTML, __unstableStripHTML as stripHTML } from '@wordpress/dom';
+import { __unstableStripHTML as stripHTML } from '@wordpress/dom';
 import { createBlock } from '@wordpress/blocks';
 
 /**
@@ -66,39 +65,10 @@ function logWarning( message, error ) {
 	}
 }
 
-const CurrentTrack = ( {
-	track,
-	showImages,
-	onTrackEnd,
-	visualizationStyle,
-} ) => {
+const CurrentTrack = ( { track, onTrackEnd, visualizationStyle } ) => {
 	const waveformRef = useRef( null );
 	const waveformInstanceRef = useRef( null );
 	const hoverInstanceRef = useRef( null );
-
-	/**
-	 * dangerouslySetInnerHTML and safeHTML are used because
-	 * the media library allows using some HTML tags in the title, artist, and album fields.
-	 */
-	const trackTitle = {
-		dangerouslySetInnerHTML: {
-			__html: safeHTML( track?.title ? track.title : __( 'Untitled' ) ),
-		},
-	};
-	const trackArtist = {
-		dangerouslySetInnerHTML: {
-			__html: safeHTML(
-				track?.artist ? track.artist : __( 'Unknown artist' )
-			),
-		},
-	};
-	const trackAlbum = {
-		dangerouslySetInnerHTML: {
-			__html: safeHTML(
-				track?.album ? track.album : __( 'Unknown album' )
-			),
-		},
-	};
 
 	let ariaLabel;
 	if ( track?.title && track?.artist && track?.album ) {
@@ -208,6 +178,24 @@ const CurrentTrack = ( {
 		currentElement.appendChild( hoverWrapper );
 		currentElement._hoverWrapper = hoverWrapper;
 
+		// Create track info overlay.
+		const trackInfo = document.createElement( 'div' );
+		trackInfo.className = 'wp-block-playlist__track-info';
+		trackInfo.innerHTML = `
+			<span class="wp-block-playlist__track-info-title">${
+				track?.title || __( 'Untitled' )
+			}</span>
+			<span class="wp-block-playlist__track-info-meta">
+				<span class="wp-block-playlist__track-info-artist">${
+					track?.artist || __( 'Unknown artist' )
+				}</span>
+				<span class="wp-block-playlist__track-info-album">${
+					track?.album || __( 'Unknown album' )
+				}</span>
+			</span>
+		`;
+		currentElement.appendChild( trackInfo );
+
 		// Create WaveformPlayer instances.
 		const baseInstance = new WaveformPlayer( baseContainer );
 		waveformInstanceRef.current = baseInstance;
@@ -220,6 +208,16 @@ const CurrentTrack = ( {
 		svgPaths.forEach( ( path ) => {
 			path.style.fill = bgColor;
 		} );
+
+		// Use album art as the play button background if available.
+		if ( track?.image ) {
+			const playBtn = baseContainer.querySelector( '.waveform-btn' );
+			if ( playBtn ) {
+				playBtn.style.backgroundImage = `url(${ track.image })`;
+				playBtn.style.backgroundSize = 'cover';
+				playBtn.style.backgroundPosition = 'center';
+			}
+		}
 
 		// Hide the play button in the hover layer.
 		const hoverPlayBtn = hoverContainer.querySelector( '.waveform-btn' );
@@ -337,47 +335,12 @@ const CurrentTrack = ( {
 	] );
 
 	return (
-		<>
-			<div
-				ref={ waveformRef }
-				className="wp-block-playlist__waveform-player"
-				data-waveform-style={ visualizationStyle || 'bars' }
-				aria-label={ ariaLabel }
-			/>
-			<div className="wp-block-playlist__current-item">
-				{ showImages && track?.image && (
-					<img
-						className="wp-block-playlist__item-image"
-						src={ track.image }
-						alt=""
-						width="70px"
-						height="70px"
-					/>
-				) }
-				<div>
-					{ ! track?.title ? (
-						<span className="wp-block-playlist__item-title">
-							<Spinner />
-						</span>
-					) : (
-						<span
-							className="wp-block-playlist__item-title"
-							{ ...trackTitle }
-						/>
-					) }
-					<div className="wp-block-playlist__current-item-artist-album">
-						<span
-							className="wp-block-playlist__item-artist"
-							{ ...trackArtist }
-						/>
-						<span
-							className="wp-block-playlist__item-album"
-							{ ...trackAlbum }
-						/>
-					</div>
-				</div>
-			</div>
-		</>
+		<div
+			ref={ waveformRef }
+			className="wp-block-playlist__waveform-player"
+			data-waveform-style={ visualizationStyle || 'bars' }
+			aria-label={ ariaLabel }
+		/>
 	);
 };
 
@@ -778,7 +741,6 @@ const PlaylistEdit = ( {
 					<CurrentTrack
 						key={ `${ tracks[ trackListIndex ]?.uniqueId }-${ visualizationStyle }` }
 						track={ tracks[ trackListIndex ] }
-						showImages={ showImages }
 						onTrackEnd={ onTrackEnd }
 						visualizationStyle={ visualizationStyle }
 					/>
