@@ -2,6 +2,13 @@
 
 .wp-block-playlist-track {
 	border-bottom: 1px solid color-mix(in srgb, currentColor 20%, transparent);
+	padding: $grid-unit-10;
+	counter-increment: playlist-track;
+
+	// Apply background to the li (includes track number) when track is playing.
+	&:has([aria-current="true"]) {
+		background-color: color-mix(in srgb, currentColor 10%, transparent);
+	}
 
 	.wp-block-playlist-track__button {
 		display: grid;
@@ -10,7 +17,7 @@
 		gap: 2px $grid-unit-10;
 		height: auto;
 		min-width: 100%;
-		padding: $grid-unit-10;
+		padding: 0;
 		font-family: inherit;
 		font-size: inherit;
 		text-align: left; // Override default button text-align.
@@ -39,9 +46,31 @@
 			align-self: center;
 			opacity: 0.7;
 		}
+	}
 
-		&[aria-current="true"] {
-			background-color: color-mix(in srgb, currentColor 10%, transparent);
+	// Track number using CSS counter (only in ordered lists).
+	ol.wp-block-playlist__tracklist & .wp-block-playlist-track__button {
+		grid-template-columns: auto 1fr auto;
+
+		&::before {
+			content: counter(playlist-track);
+			grid-column: 1;
+			grid-row: 1 / -1;
+			align-self: center;
+			opacity: 0.7;
+			min-width: 1.5em;
+		}
+
+		.wp-block-playlist-track__title {
+			grid-column: 2;
+		}
+
+		.wp-block-playlist-track__artist {
+			grid-column: 2;
+		}
+
+		.wp-block-playlist-track__length {
+			grid-column: 3;
 		}
 	}
 }

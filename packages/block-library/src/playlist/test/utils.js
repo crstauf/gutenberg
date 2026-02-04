@@ -11,7 +11,7 @@ import {
 describe( 'WAVEFORM_BUTTON_WIDTH', () => {
 	it( 'should be defined as a number', () => {
 		expect( typeof WAVEFORM_BUTTON_WIDTH ).toBe( 'number' );
-		expect( WAVEFORM_BUTTON_WIDTH ).toBe( 60 );
+		expect( WAVEFORM_BUTTON_WIDTH ).toBe( 100 );
 	} );
 } );
 

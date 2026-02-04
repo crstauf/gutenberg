@@ -190,6 +190,7 @@ export function createWaveformContainer( {
 	const container = document.createElement( 'div' );
 	container.setAttribute( 'data-waveform-player', '' );
 	container.setAttribute( 'data-url', url );
+	container.setAttribute( 'data-height', String( WAVEFORM_BUTTON_WIDTH ) );
 	container.setAttribute( 'data-waveform-style', visualizationStyle );
 	container.setAttribute( 'data-waveform-color', waveformColor );
 	container.setAttribute( 'data-progress-color', progressColor );

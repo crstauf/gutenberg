@@ -86,8 +86,8 @@ $waveform-button-size: 100px;
 		bottom: 0;
 		display: flex;
 		flex-direction: column;
-		justify-content: center;
-		padding: 0 $grid-unit-15;
+		justify-content: flex-start;
+		padding: $grid-unit-10 $grid-unit-15;
 		pointer-events: none;
 		z-index: 3;
 		gap: 2px;
@@ -242,7 +242,9 @@ $waveform-button-size: 100px;
 	}
 
 	ol.wp-block-playlist__tracklist {
-		padding-left: $grid-unit-20;
+		padding-left: 0;
+		list-style: none;
+		counter-reset: playlist-track;
 	}
 
 	li.block-list-appender.block-list-appender {
