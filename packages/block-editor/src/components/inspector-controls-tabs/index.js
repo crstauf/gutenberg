@@ -88,6 +88,13 @@ export default function InspectorControlsTabs( {
 						)
 					) }
 				</Tabs.TabList>
+				<Tabs.TabPanel tabId={ TAB_LIST_VIEW.name } focusable={ false }>
+					<ContentTab contentClientIds={ contentClientIds } />
+					<InspectorControls.Slot group="list" />
+				</Tabs.TabPanel>
+				<Tabs.TabPanel tabId={ TAB_CONTENT.name } focusable={ false }>
+					<InspectorControls.Slot group="content" />
+				</Tabs.TabPanel>
 				<Tabs.TabPanel tabId={ TAB_SETTINGS.name } focusable={ false }>
 					<SettingsTab showAdvancedControls={ !! blockName } />
 				</Tabs.TabPanel>
@@ -99,13 +106,6 @@ export default function InspectorControlsTabs( {
 						isSectionBlock={ isSectionBlock }
 						contentClientIds={ contentClientIds }
 					/>
-				</Tabs.TabPanel>
-				<Tabs.TabPanel tabId={ TAB_CONTENT.name } focusable={ false }>
-					<ContentTab contentClientIds={ contentClientIds } />
-					<InspectorControls.Slot group="content" />
-				</Tabs.TabPanel>
-				<Tabs.TabPanel tabId={ TAB_LIST_VIEW.name } focusable={ false }>
-					<InspectorControls.Slot group="list" />
 				</Tabs.TabPanel>
 			</Tabs>
 		</div>
