@@ -129,7 +129,12 @@ function Iframe( {
 
 	const setRef = useRefEffect( ( node ) => {
 		node._load = () => {
-			setIframeDocument( node.contentDocument );
+			const doc = node.contentDocument;
+			// If the `contentDocument` doesn't have a body yet, append a new one.
+			if ( ! doc.body ) {
+				doc.documentElement.appendChild( doc.createElement( 'body' ) );
+			}
+			setIframeDocument( doc );
 		};
 		let iFrameDocument;
 		// Prevent the default browser action for files dropped outside of dropzones.
@@ -259,6 +264,7 @@ function Iframe( {
 	<head>
 		<meta charset="utf-8">
 		<base href="${ window.location.origin }">
+		<script>window.frameElement._load()</script>
 		<style>
 			html{
 				height: auto !important;
@@ -274,7 +280,6 @@ function Iframe( {
 		</style>
 		${ styles }
 		${ scripts }
-		<script>window.frameElement._load()</script>
 	</head>
 </html>`;
 
