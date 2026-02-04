@@ -47,126 +47,76 @@ export function getEffectiveBackgroundColor( element ) {
 }
 
 /**
- * Darken a color by mixing it with black.
+ * Get the progress background color based on the background color.
+ * Lightens light colors and darkens dark colors for contrast,
+ * but reverses direction if already at white or black.
  *
- * @param {string} color  - The color string (rgb or rgba format).
- * @param {number} amount - The amount to darken (0-1, where 1 is fully black).
- * @return {string} The darkened color as an rgb() string.
+ * @param {string} bgColor - The background color string (hex, rgb, or rgba format).
+ * @param {number} amount  - The amount to adjust (0-1).
+ * @return {string} The adjusted color as an rgb() string.
  */
-export function darkenColor( color, amount = 0.5 ) {
-	// Parse rgb/rgba values.
-	const match = color.match( /rgba?\((\d+),\s*(\d+),\s*(\d+)/ );
-	if ( ! match ) {
-		return color;
-	}
+export function getProgressBackgroundColor( bgColor, amount = 0.25 ) {
+	let r, g, b;
 
-	const r = Math.round( parseInt( match[ 1 ], 10 ) * ( 1 - amount ) );
-	const g = Math.round( parseInt( match[ 2 ], 10 ) * ( 1 - amount ) );
-	const b = Math.round( parseInt( match[ 3 ], 10 ) * ( 1 - amount ) );
-
-	return `rgb(${ r }, ${ g }, ${ b })`;
-}
-
-/**
- * Mix two colors together.
- *
- * @param {string} color1 - The first color string (rgb or rgba format).
- * @param {string} color2 - The second color string (rgb or rgba format).
- * @param {number} ratio  - The mix ratio (0 = all color1, 1 = all color2, 0.5 = equal mix).
- * @return {string} The mixed color as an rgb() string.
- */
-export function mixColors( color1, color2, ratio = 0.5 ) {
-	const match1 = color1.match( /rgba?\((\d+),\s*(\d+),\s*(\d+)/ );
-	const match2 = color2.match( /rgba?\((\d+),\s*(\d+),\s*(\d+)/ );
-
-	if ( ! match1 || ! match2 ) {
-		return color1;
-	}
-
-	const r1 = parseInt( match1[ 1 ], 10 );
-	const g1 = parseInt( match1[ 2 ], 10 );
-	const b1 = parseInt( match1[ 3 ], 10 );
-
-	const r2 = parseInt( match2[ 1 ], 10 );
-	const g2 = parseInt( match2[ 2 ], 10 );
-	const b2 = parseInt( match2[ 3 ], 10 );
-
-	const r = Math.round( r1 + ( r2 - r1 ) * ratio );
-	const g = Math.round( g1 + ( g2 - g1 ) * ratio );
-	const b = Math.round( b1 + ( b2 - b1 ) * ratio );
-
-	return `rgb(${ r }, ${ g }, ${ b })`;
-}
-
-/**
- * Extract the dominant color from an image URL using canvas sampling.
- *
- * @param {string} imageUrl - The URL of the image to analyze.
- * @return {Promise<string|null>} The dominant color as an rgb() string, or null if extraction fails.
- */
-export function getDominantColor( imageUrl ) {
-	return new Promise( ( resolve ) => {
-		if ( ! imageUrl ) {
-			resolve( null );
-			return;
+	// Try to match hex color first (#RGB, #RRGGBB, or #RRGGBBAA).
+	const hexMatch = bgColor.match( /^#([0-9a-f]{3,8})$/i );
+	if ( hexMatch ) {
+		const hex = hexMatch[ 1 ];
+		if ( hex.length === 3 || hex.length === 4 ) {
+			// Short form: #RGB or #RGBA
+			r = parseInt( hex[ 0 ] + hex[ 0 ], 16 );
+			g = parseInt( hex[ 1 ] + hex[ 1 ], 16 );
+			b = parseInt( hex[ 2 ] + hex[ 2 ], 16 );
+		} else {
+			// Long form: #RRGGBB or #RRGGBBAA
+			r = parseInt( hex.slice( 0, 2 ), 16 );
+			g = parseInt( hex.slice( 2, 4 ), 16 );
+			b = parseInt( hex.slice( 4, 6 ), 16 );
 		}
+	} else {
+		// Try to match rgb/rgba color.
+		const rgbMatch = bgColor.match( /rgba?\((\d+),\s*(\d+),\s*(\d+)/ );
+		if ( ! rgbMatch ) {
+			return bgColor;
+		}
+		r = parseInt( rgbMatch[ 1 ], 10 );
+		g = parseInt( rgbMatch[ 2 ], 10 );
+		b = parseInt( rgbMatch[ 3 ], 10 );
+	}
 
-		const img = new window.Image();
-		img.crossOrigin = 'anonymous';
+	// Calculate perceived brightness (0-255).
+	const brightness = ( r * 299 + g * 587 + b * 114 ) / 1000;
 
-		img.onload = () => {
-			try {
-				const canvas = document.createElement( 'canvas' );
-				const ctx = canvas.getContext( '2d' );
+	// Determine if we should lighten or darken.
+	// Light colors get lighter, dark colors get darker.
+	// But if already at an extreme (near white/black), reverse direction.
+	const isLight = brightness > 128;
+	const isNearWhite = brightness > 240;
+	const isNearBlack = brightness < 30;
 
-				// Use a small size for performance.
-				const size = 50;
-				canvas.width = size;
-				canvas.height = size;
+	let shouldLighten;
+	if ( isNearWhite ) {
+		shouldLighten = false; // Near white: darken for contrast.
+	} else if ( isNearBlack ) {
+		shouldLighten = true; // Near black: lighten for contrast.
+	} else {
+		shouldLighten = isLight; // Normal: lighten light colors, darken dark colors.
+	}
 
-				ctx.drawImage( img, 0, 0, size, size );
-				const imageData = ctx.getImageData( 0, 0, size, size ).data;
+	let newR, newG, newB;
+	if ( shouldLighten ) {
+		// Lighten: move towards 255.
+		newR = Math.round( r + ( 255 - r ) * amount );
+		newG = Math.round( g + ( 255 - g ) * amount );
+		newB = Math.round( b + ( 255 - b ) * amount );
+	} else {
+		// Darken: move towards 0.
+		newR = Math.round( r * ( 1 - amount ) );
+		newG = Math.round( g * ( 1 - amount ) );
+		newB = Math.round( b * ( 1 - amount ) );
+	}
 
-				// Calculate average color.
-				let r = 0,
-					g = 0,
-					b = 0,
-					count = 0;
-
-				for ( let i = 0; i < imageData.length; i += 4 ) {
-					// Skip very dark or very light pixels.
-					const pixelR = imageData[ i ];
-					const pixelG = imageData[ i + 1 ];
-					const pixelB = imageData[ i + 2 ];
-					const brightness = ( pixelR + pixelG + pixelB ) / 3;
-
-					if ( brightness > 30 && brightness < 220 ) {
-						r += pixelR;
-						g += pixelG;
-						b += pixelB;
-						count++;
-					}
-				}
-
-				if ( count > 0 ) {
-					r = Math.round( r / count );
-					g = Math.round( g / count );
-					b = Math.round( b / count );
-					resolve( `rgb(${ r }, ${ g }, ${ b })` );
-				} else {
-					resolve( null );
-				}
-			} catch ( e ) {
-				resolve( null );
-			}
-		};
-
-		img.onerror = () => {
-			resolve( null );
-		};
-
-		img.src = imageUrl;
-	} );
+	return `rgb(${ newR }, ${ newG }, ${ newB })`;
 }
 
 /**
@@ -178,6 +128,8 @@ export function getDominantColor( imageUrl ) {
  * @param {string} options.waveformColor      - The waveform bar color.
  * @param {string} options.progressColor      - The progress indicator color.
  * @param {string} options.buttonColor        - The play button color.
+ * @param {string} options.title              - The track title.
+ * @param {string} options.subtitle           - The track subtitle (artist/album).
  * @return {Element} The configured container element.
  */
 export function createWaveformContainer( {
@@ -186,6 +138,8 @@ export function createWaveformContainer( {
 	waveformColor,
 	progressColor,
 	buttonColor,
+	title = '',
+	subtitle = '',
 } ) {
 	const container = document.createElement( 'div' );
 	container.setAttribute( 'data-waveform-player', '' );
@@ -195,8 +149,8 @@ export function createWaveformContainer( {
 	container.setAttribute( 'data-waveform-color', waveformColor );
 	container.setAttribute( 'data-progress-color', progressColor );
 	container.setAttribute( 'data-button-color', buttonColor );
-	container.setAttribute( 'data-title', '' );
-	container.setAttribute( 'data-subtitle', '' );
+	container.setAttribute( 'data-title', title );
+	container.setAttribute( 'data-subtitle', subtitle );
 	container.setAttribute( 'data-show-time', 'false' );
 	return container;
 }

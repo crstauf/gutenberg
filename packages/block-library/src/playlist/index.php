@@ -97,11 +97,16 @@ function render_block_core_playlist( $attributes, $content, $block ) {
 	);
 
 	// Create the HTML for the waveform player.
-	$visualization_style = isset( $attributes['visualizationStyle'] ) ? $attributes['visualizationStyle'] : 'bars';
+	$visualization_style       = isset( $attributes['visualizationStyle'] ) ? $attributes['visualizationStyle'] : 'bars';
+	$show_progress_background  = isset( $attributes['showProgressBackground'] ) ? $attributes['showProgressBackground'] : true;
+	$progress_color            = isset( $attributes['progressColor'] ) ? $attributes['progressColor'] : '';
+
+	$progress_color_attr = $progress_color ? ' data-progress-color="' . esc_attr( $progress_color ) . '"' : '';
+	$show_progress_attr  = $show_progress_background ? ' data-show-progress-background="true"' : '';
 
 	$html = '<div
 			class="wp-block-playlist__waveform-player"
-			data-waveform-style="' . esc_attr( $visualization_style ) . '"
+			data-waveform-style="' . esc_attr( $visualization_style ) . '"' . $show_progress_attr . $progress_color_attr . '
 			data-wp-bind--data-url="state.currentTrack.url"
 			data-wp-bind--aria-label="state.currentTrack.ariaLabel"
 			data-wp-watch="callbacks.initWaveformPlayer"
@@ -131,6 +136,41 @@ function render_block_core_playlist( $attributes, $content, $block ) {
 			)
 		)
 	);
+
+	// If border styles are set, pass them as CSS custom properties for track borders.
+	// Check for preset color first, then custom color.
+	$border_color = null;
+	if ( ! empty( $attributes['borderColor'] ) ) {
+		$border_color = 'var(--wp--preset--color--' . $attributes['borderColor'] . ')';
+	} elseif ( ! empty( $attributes['style']['border']['color'] ) ) {
+		$border_color = $attributes['style']['border']['color'];
+	}
+
+	// Get border width if set.
+	$border_width = null;
+	if ( ! empty( $attributes['style']['border']['width'] ) ) {
+		$border_width = $attributes['style']['border']['width'];
+	}
+
+	if ( $border_color || $border_width ) {
+		$existing_style = $processor->get_attribute( 'style' ) ?? '';
+		$new_styles     = array();
+
+		if ( $border_color ) {
+			$new_styles[] = '--wp-block-playlist-border-color: ' . esc_attr( $border_color );
+		}
+		if ( $border_width ) {
+			$new_styles[] = '--wp-block-playlist-border-width: ' . esc_attr( $border_width );
+		}
+
+		$new_style = implode( '; ', $new_styles ) . ';';
+		if ( $existing_style ) {
+			// Ensure existing style ends with semicolon before appending.
+			$existing_style = rtrim( $existing_style, '; ' ) . ';';
+			$new_style      = $existing_style . ' ' . $new_style;
+		}
+		$processor->set_attribute( 'style', $new_style );
+	}
 
 	return $processor->get_updated_html();
 }

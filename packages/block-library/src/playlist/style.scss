@@ -4,6 +4,9 @@
 $waveform-button-size: 100px;
 
 .wp-block-playlist {
+	// Default border color for track separators (can be overridden via PHP when block has border color).
+	--wp-block-playlist-border-color: color-mix(in srgb, currentColor 20%, transparent);
+
 	padding: $grid-unit-20;
 
 	audio {
@@ -71,54 +74,11 @@ $waveform-button-size: 100px;
 		pointer-events: none;
 		z-index: 2;
 
-		// Hide the play button in this layer.
-		.waveform-btn {
+		// Hide the play button and info in this layer.
+		.waveform-btn,
+		.waveform-info {
 			visibility: hidden;
 		}
-	}
-
-	// Track info overlay on the waveform player.
-	.wp-block-playlist__track-info {
-		position: absolute;
-		top: 0;
-		left: $waveform-button-size;
-		right: 0;
-		bottom: 0;
-		display: flex;
-		flex-direction: column;
-		justify-content: flex-start;
-		padding: $grid-unit-10 $grid-unit-15;
-		pointer-events: none;
-		z-index: 3;
-		gap: 2px;
-		overflow: hidden;
-	}
-
-	.wp-block-playlist__track-info-title {
-		font-weight: 600;
-		white-space: nowrap;
-		overflow: hidden;
-		text-overflow: ellipsis;
-		text-shadow:
-			1px 1px 2px rgba(0, 0, 0, 0.5),
-			-1px -1px 2px rgba(255, 255, 255, 0.3);
-	}
-
-	.wp-block-playlist__track-info-meta {
-		display: flex;
-		gap: 8px;
-		font-size: 0.85em;
-		opacity: 0.85;
-		white-space: nowrap;
-		overflow: hidden;
-		text-overflow: ellipsis;
-		text-shadow:
-			1px 1px 2px rgba(0, 0, 0, 0.5),
-			-1px -1px 2px rgba(255, 255, 255, 0.3);
-	}
-
-	.wp-block-playlist__track-info-album {
-		font-style: italic;
 	}
 
 
@@ -152,6 +112,7 @@ $waveform-button-size: 100px;
 	}
 
 	.waveform-btn {
+		border: none;
 		border-radius: 0;
 		border-end-start-radius: 0.125rem;
 		border-start-start-radius: 0.125rem;
@@ -161,6 +122,12 @@ $waveform-button-size: 100px;
 		background-color: currentColor;
 		margin: 0;
 		position: relative;
+
+		// Make play/pause icons larger.
+		svg {
+			width: 48px;
+			height: 48px;
+		}
 
 		// Semi-transparent overlay for better icon contrast on album art.
 		&::before {
@@ -215,9 +182,43 @@ $waveform-button-size: 100px;
 		background: color-mix(in srgb, currentColor 30%, transparent);
 	}
 
-	// Hide WaveformPlayer's built-in info display since we show our own.
-	// Using !important to override the library's inline styles.
-	.waveform-info,
+	// Style WaveformPlayer's built-in info display.
+	.waveform-info {
+		display: flex !important;
+		flex-direction: column;
+		justify-content: center;
+		align-items: flex-start;
+		position: absolute;
+		left: $waveform-button-size;
+		right: 0;
+		top: 0;
+		bottom: 0;
+		padding: $grid-unit-10 $grid-unit-15;
+		pointer-events: none;
+		z-index: 3;
+		font-size: inherit;
+		text-shadow:
+			1px 1px 2px rgba(0, 0, 0, 0.5),
+			-1px -1px 2px rgba(255, 255, 255, 0.3);
+	}
+
+	.waveform-title {
+		font-size: inherit;
+		font-weight: 600;
+		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
+	}
+
+	.waveform-subtitle {
+		font-size: inherit;
+		opacity: 0.85;
+		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
+	}
+
+	// Hide time display.
 	.waveform-time {
 		display: none !important;
 	}

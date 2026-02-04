@@ -15,9 +15,7 @@ import { store, getContext, getElement } from '@wordpress/interactivity';
 import {
 	colorWithOpacity,
 	getEffectiveBackgroundColor,
-	getDominantColor,
-	darkenColor,
-	mixColors,
+	getProgressBackgroundColor,
 	createWaveformContainer,
 	WAVEFORM_BUTTON_WIDTH,
 } from './utils';
@@ -221,36 +219,33 @@ const { state } = store(
 				const baseWaveformColor = colorWithOpacity( textColor, 0.3 );
 				const visualizationStyle =
 					ref.getAttribute( 'data-waveform-style' ) || 'bars';
+				const showProgressBackground =
+					ref.getAttribute( 'data-show-progress-background' ) ===
+					'true';
+				const customProgressColor =
+					ref.getAttribute( 'data-progress-color' ) || '';
 
-				// Store the current track URL for race condition detection.
-				const currentTrackUrl = track.url;
-
-				// Create progress background layer (colored background behind played portion).
-				const progressBg = document.createElement( 'div' );
-				progressBg.className = 'wp-block-playlist__waveform-progress';
-				// Default to darkened background color if no album art.
-				progressBg.style.backgroundColor = darkenColor( bgColor, 0.5 );
-				ref.appendChild( progressBg );
-				ref._progressBg = progressBg;
-
-				// Try to extract dominant color from album art and mix with background.
-				if ( track.image ) {
-					getDominantColor( track.image ).then( ( dominantColor ) => {
-						// Check if track hasn't changed while we were extracting the color.
-						if (
-							dominantColor &&
-							ref._progressBg &&
-							lastInitializedUrl.get( ref ) === currentTrackUrl
-						) {
-							// Mix album color with background for contrast with bars.
-							ref._progressBg.style.backgroundColor = mixColors(
-								dominantColor,
-								bgColor,
-								0.5
-							);
-						}
-					} );
+				// Create progress background layer if enabled.
+				if ( showProgressBackground ) {
+					const progressBg = document.createElement( 'div' );
+					progressBg.className =
+						'wp-block-playlist__waveform-progress';
+					progressBg.style.backgroundColor =
+						customProgressColor ||
+						getProgressBackgroundColor( bgColor );
+					ref.appendChild( progressBg );
+					ref._progressBg = progressBg;
 				}
+
+				// Build subtitle from artist and album.
+				const subtitleParts = [];
+				if ( track?.artist ) {
+					subtitleParts.push( track.artist );
+				}
+				if ( track?.album ) {
+					subtitleParts.push( track.album );
+				}
+				const subtitle = subtitleParts.join( ' — ' );
 
 				// Create wrapper for the base waveform (30% opacity text-colored bars).
 				const baseWrapper = document.createElement( 'div' );
@@ -261,6 +256,8 @@ const { state } = store(
 					waveformColor: baseWaveformColor,
 					progressColor: baseWaveformColor,
 					buttonColor: textColor,
+					title: track?.title || 'Untitled',
+					subtitle,
 				} );
 				baseWrapper.appendChild( baseContainer );
 				ref.appendChild( baseWrapper );
@@ -279,24 +276,6 @@ const { state } = store(
 				hoverWrapper.appendChild( hoverContainer );
 				ref.appendChild( hoverWrapper );
 				ref._hoverWrapper = hoverWrapper;
-
-				// Create track info overlay.
-				const trackInfo = document.createElement( 'div' );
-				trackInfo.className = 'wp-block-playlist__track-info';
-				trackInfo.innerHTML = `
-					<span class="wp-block-playlist__track-info-title">${
-						track?.title || 'Untitled'
-					}</span>
-					<span class="wp-block-playlist__track-info-meta">
-						<span class="wp-block-playlist__track-info-artist">${
-							track?.artist || 'Unknown artist'
-						}</span>
-						<span class="wp-block-playlist__track-info-album">${
-							track?.album || 'Unknown album'
-						}</span>
-					</span>
-				`;
-				ref.appendChild( trackInfo );
 
 				// Create base WaveformPlayer instance.
 				const baseInstance = new WaveformPlayer( baseContainer );

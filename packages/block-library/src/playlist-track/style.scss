@@ -1,9 +1,16 @@
 @use "@wordpress/base-styles/variables" as *;
 
 .wp-block-playlist-track {
-	border-bottom: 1px solid color-mix(in srgb, currentColor 20%, transparent);
+	// Only show border between tracks when block has a border specified.
+	border-bottom: var(--wp-block-playlist-border-width, 0) solid var(--wp-block-playlist-border-color, transparent);
 	padding: $grid-unit-10;
 	counter-increment: playlist-track;
+
+	// Hover effect for tracks.
+	&:hover {
+		background-color: color-mix(in srgb, currentColor 5%, transparent);
+		cursor: pointer;
+	}
 
 	// Apply background to the li (includes track number) when track is playing.
 	&:has([aria-current="true"]) {

@@ -20,6 +20,8 @@ import {
 	BlockControls,
 	InspectorControls,
 	InnerBlocks,
+	__experimentalColorGradientSettingsDropdown as ColorGradientSettingsDropdown,
+	__experimentalUseMultipleOriginColorsAndGradients as useMultipleOriginColorsAndGradients,
 } from '@wordpress/block-editor';
 import {
 	ToggleControl,
@@ -43,9 +45,7 @@ import { useToolsPanelDropdownMenuProps } from '../utils/hooks';
 import {
 	colorWithOpacity,
 	getEffectiveBackgroundColor,
-	darkenColor,
-	mixColors,
-	getDominantColor,
+	getProgressBackgroundColor,
 	createWaveformContainer,
 	WAVEFORM_BUTTON_WIDTH,
 } from './utils';
@@ -65,7 +65,13 @@ function logWarning( message, error ) {
 	}
 }
 
-const CurrentTrack = ( { track, onTrackEnd, visualizationStyle } ) => {
+const CurrentTrack = ( {
+	track,
+	onTrackEnd,
+	visualizationStyle,
+	showProgressBackground,
+	progressColor,
+} ) => {
 	const waveformRef = useRef( null );
 	const waveformInstanceRef = useRef( null );
 	const hoverInstanceRef = useRef( null );
@@ -104,9 +110,6 @@ const CurrentTrack = ( { track, onTrackEnd, visualizationStyle } ) => {
 		const baseWaveformColor = colorWithOpacity( textColor, 0.3 );
 		const style = visualizationStyle || 'bars';
 
-		// Store the current track URL for race condition detection.
-		const currentTrackUrl = track.src;
-
 		// Destroy existing instances if any.
 		if ( waveformInstanceRef.current?.destroy ) {
 			try {
@@ -126,30 +129,27 @@ const CurrentTrack = ( { track, onTrackEnd, visualizationStyle } ) => {
 		// Clear any leftover DOM elements from previous player.
 		currentElement.innerHTML = '';
 
-		// Create progress background layer.
-		const progressBg = document.createElement( 'div' );
-		progressBg.className = 'wp-block-playlist__waveform-progress';
-		progressBg.style.backgroundColor = darkenColor( bgColor, 0.5 );
-		currentElement.appendChild( progressBg );
+		// Create progress background layer if enabled.
+		if ( showProgressBackground ) {
+			const progressBg = document.createElement( 'div' );
+			progressBg.className = 'wp-block-playlist__waveform-progress';
+			progressBg.style.backgroundColor =
+				progressColor || getProgressBackgroundColor( bgColor );
+			currentElement.appendChild( progressBg );
 
-		// Try to extract dominant color from album art.
-		if ( track?.image ) {
-			getDominantColor( track.image ).then( ( dominantColor ) => {
-				// Check if track hasn't changed while we were extracting the color.
-				if (
-					dominantColor &&
-					currentElement._progressBg &&
-					currentElement._trackUrl === currentTrackUrl
-				) {
-					currentElement._progressBg.style.backgroundColor =
-						mixColors( dominantColor, bgColor, 0.5 );
-				}
-			} );
+			// Store reference for progress updates.
+			currentElement._progressBg = progressBg;
 		}
 
-		// Store references for cleanup and race condition detection.
-		currentElement._progressBg = progressBg;
-		currentElement._trackUrl = currentTrackUrl;
+		// Build subtitle from artist and album.
+		const subtitleParts = [];
+		if ( track?.artist ) {
+			subtitleParts.push( track.artist );
+		}
+		if ( track?.album ) {
+			subtitleParts.push( track.album );
+		}
+		const subtitle = subtitleParts.join( ' — ' );
 
 		// Create base waveform layer (30% opacity bars).
 		const baseWrapper = document.createElement( 'div' );
@@ -160,6 +160,8 @@ const CurrentTrack = ( { track, onTrackEnd, visualizationStyle } ) => {
 			waveformColor: baseWaveformColor,
 			progressColor: baseWaveformColor,
 			buttonColor: textColor,
+			title: track?.title || __( 'Untitled' ),
+			subtitle,
 		} );
 		baseWrapper.appendChild( baseContainer );
 		currentElement.appendChild( baseWrapper );
@@ -177,24 +179,6 @@ const CurrentTrack = ( { track, onTrackEnd, visualizationStyle } ) => {
 		hoverWrapper.appendChild( hoverContainer );
 		currentElement.appendChild( hoverWrapper );
 		currentElement._hoverWrapper = hoverWrapper;
-
-		// Create track info overlay.
-		const trackInfo = document.createElement( 'div' );
-		trackInfo.className = 'wp-block-playlist__track-info';
-		trackInfo.innerHTML = `
-			<span class="wp-block-playlist__track-info-title">${
-				track?.title || __( 'Untitled' )
-			}</span>
-			<span class="wp-block-playlist__track-info-meta">
-				<span class="wp-block-playlist__track-info-artist">${
-					track?.artist || __( 'Unknown artist' )
-				}</span>
-				<span class="wp-block-playlist__track-info-album">${
-					track?.album || __( 'Unknown album' )
-				}</span>
-			</span>
-		`;
-		currentElement.appendChild( trackInfo );
 
 		// Create WaveformPlayer instances.
 		const baseInstance = new WaveformPlayer( baseContainer );
@@ -331,6 +315,8 @@ const CurrentTrack = ( { track, onTrackEnd, visualizationStyle } ) => {
 		track?.uniqueId,
 		track?.image,
 		visualizationStyle,
+		showProgressBackground,
+		progressColor,
 		onTrackEnd,
 	] );
 
@@ -359,14 +345,33 @@ const PlaylistEdit = ( {
 		showArtists,
 		currentTrack,
 		visualizationStyle,
+		showProgressBackground,
+		progressColor,
+		borderColor,
+		style,
 		tagName: TagName = showNumbers ? 'ol' : 'ul',
 	} = attributes;
 	const [ trackListIndex, setTrackListIndex ] = useState( 0 );
-	const blockProps = useBlockProps();
+
+	// Build custom style with border CSS variables for track separators.
+	const customStyle = {};
+	if ( borderColor ) {
+		customStyle[
+			'--wp-block-playlist-border-color'
+		] = `var(--wp--preset--color--${ borderColor })`;
+	} else if ( style?.border?.color ) {
+		customStyle[ '--wp-block-playlist-border-color' ] = style.border.color;
+	}
+	if ( style?.border?.width ) {
+		customStyle[ '--wp-block-playlist-border-width' ] = style.border.width;
+	}
+
+	const blockProps = useBlockProps( { style: customStyle } );
 	const { replaceInnerBlocks, __unstableMarkNextChangeAsNotPersistent } =
 		useDispatch( blockEditorStore );
 	const { createErrorNotice } = useDispatch( noticesStore );
 	const dropdownMenuProps = useToolsPanelDropdownMenuProps();
+	const colorGradientSettings = useMultipleOriginColorsAndGradients();
 	function onUploadError( message ) {
 		createErrorNotice( message, { type: 'snackbar' } );
 	}
@@ -621,6 +626,8 @@ const PlaylistEdit = ( {
 							showImages: true,
 							order: 'asc',
 							visualizationStyle: 'bars',
+							showProgressBackground: true,
+							progressColor: undefined,
 						} );
 					} }
 					dropdownMenuProps={ dropdownMenuProps }
@@ -734,15 +741,59 @@ const PlaylistEdit = ( {
 							}
 						/>
 					</ToolsPanelItem>
+					<ToolsPanelItem
+						label={ __( 'Show progress background' ) }
+						isShownByDefault
+						hasValue={ () => showProgressBackground !== true }
+						onDeselect={ () =>
+							setAttributes( { showProgressBackground: true } )
+						}
+					>
+						<ToggleControl
+							__nextHasNoMarginBottom
+							label={ __( 'Show progress background' ) }
+							onChange={ toggleAttribute(
+								'showProgressBackground'
+							) }
+							checked={ showProgressBackground }
+						/>
+					</ToolsPanelItem>
 				</ToolsPanel>
 			</InspectorControls>
+			{ showProgressBackground &&
+				colorGradientSettings.hasColorsOrGradients && (
+					<InspectorControls group="color">
+						<ColorGradientSettingsDropdown
+							__experimentalIsRenderedInSidebar
+							settings={ [
+								{
+									colorValue: progressColor,
+									label: __( 'Progress background' ),
+									onColorChange: ( value ) =>
+										setAttributes( {
+											progressColor: value,
+										} ),
+									isShownByDefault: true,
+									resetAllFilter: () => ( {
+										progressColor: undefined,
+									} ),
+									clearable: true,
+								},
+							] }
+							panelId={ clientId }
+							{ ...colorGradientSettings }
+						/>
+					</InspectorControls>
+				) }
 			<figure { ...blockProps }>
 				<Disabled isDisabled={ ! isSelected }>
 					<CurrentTrack
-						key={ `${ tracks[ trackListIndex ]?.uniqueId }-${ visualizationStyle }` }
+						key={ `${ tracks[ trackListIndex ]?.uniqueId }-${ visualizationStyle }-${ showProgressBackground }-${ progressColor }` }
 						track={ tracks[ trackListIndex ] }
 						onTrackEnd={ onTrackEnd }
 						visualizationStyle={ visualizationStyle }
+						showProgressBackground={ showProgressBackground }
+						progressColor={ progressColor }
 					/>
 				</Disabled>
 				{ showTracklist && (
