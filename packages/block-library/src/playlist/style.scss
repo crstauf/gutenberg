@@ -1,7 +1,7 @@
 @use "@wordpress/base-styles/variables" as *;
 
 // Waveform button dimensions - keep in sync with WAVEFORM_BUTTON_WIDTH in utils.js.
-$waveform-button-size: 60px;
+$waveform-button-size: 100px;
 
 .wp-block-playlist {
 	padding: $grid-unit-20;
@@ -96,7 +96,6 @@ $waveform-button-size: 60px;
 
 	.wp-block-playlist__track-info-title {
 		font-weight: 600;
-		font-size: 14px;
 		white-space: nowrap;
 		overflow: hidden;
 		text-overflow: ellipsis;
@@ -108,7 +107,7 @@ $waveform-button-size: 60px;
 	.wp-block-playlist__track-info-meta {
 		display: flex;
 		gap: 8px;
-		font-size: 12px;
+		font-size: 0.85em;
 		opacity: 0.85;
 		white-space: nowrap;
 		overflow: hidden;
@@ -224,7 +223,6 @@ $waveform-button-size: 60px;
 	}
 
 	.wp-block-playlist__tracklist {
-		font-size: 14px;
 
 		&.wp-block-playlist__tracklist-is-hidden {
 			display: none;

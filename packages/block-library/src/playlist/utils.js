@@ -5,7 +5,7 @@
 /**
  * Width of the waveform player button in pixels.
  */
-export const WAVEFORM_BUTTON_WIDTH = 60;
+export const WAVEFORM_BUTTON_WIDTH = 100;
 
 /**
  * Convert an rgb/rgba color string to rgba with a specific opacity.

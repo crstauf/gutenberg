@@ -2,7 +2,6 @@
 
 .wp-block-playlist-track {
 	border-bottom: 1px solid color-mix(in srgb, currentColor 20%, transparent);
-	padding: $grid-unit-10;
 
 	.wp-block-playlist-track__button {
 		display: grid;
@@ -11,8 +10,9 @@
 		gap: 2px $grid-unit-10;
 		height: auto;
 		min-width: 100%;
-		padding: 0;
+		padding: $grid-unit-10;
 		font-family: inherit;
+		font-size: inherit;
 		text-align: left; // Override default button text-align.
 		line-height: 1.5;
 		background-color: transparent;
@@ -41,9 +41,7 @@
 		}
 
 		&[aria-current="true"] {
-			.wp-block-playlist-track__title {
-				font-weight: 600;
-			}
+			background-color: color-mix(in srgb, currentColor 10%, transparent);
 		}
 	}
 }
