@@ -1,6 +1,5 @@
-/**
- * WordPress dependencies
- */
+import { clsx } from 'clsx';
+import { hasBlockSupport } from '@wordpress/blocks';
 import { useSelect, useDispatch } from '@wordpress/data';
 import {
 	Button,
@@ -10,10 +9,6 @@ import {
 	FlexBlock,
 	FlexItem,
 } from '@wordpress/components';
-
-/**
- * Internal dependencies
- */
 import { store as blockEditorStore } from '../../store';
 import BlockIcon from '../block-icon';
 import useBlockDisplayInformation from '../use-block-display-information';
@@ -42,15 +37,25 @@ function BlockQuickNavigationItem( { clientId, onSelect } ) {
 		clientId,
 		context: 'list-view',
 	} );
-	const { isSelected } = useSelect(
+	const { isSelected, hasSelectedInnerBlock, hasListViewSupport } = useSelect(
 		( select ) => {
-			const { isBlockSelected, hasSelectedInnerBlock } =
-				select( blockEditorStore );
+			const {
+				isBlockSelected,
+				hasSelectedInnerBlock: _hasSelectedInnerBlock,
+				getBlockName,
+			} = select( blockEditorStore );
+
+			const blockName = getBlockName( clientId );
 
 			return {
-				isSelected:
-					isBlockSelected( clientId ) ||
-					hasSelectedInnerBlock( clientId, /* deep: */ true ),
+				isSelected: isBlockSelected( clientId ),
+				hasSelectedInnerBlock: _hasSelectedInnerBlock(
+					clientId,
+					true /* deep: */
+				),
+				hasListViewSupport:
+					blockName === 'core/navigation' ||
+					hasBlockSupport( blockName, 'listView' ),
 			};
 		},
 		[ clientId ]
@@ -60,8 +65,11 @@ function BlockQuickNavigationItem( { clientId, onSelect } ) {
 	return (
 		<Button
 			__next40pxDefaultSize
-			className="block-editor-block-quick-navigation__item"
-			isPressed={ isSelected }
+			className={ clsx( 'block-editor-block-quick-navigation__item', {
+				'has-selected-list-view-block':
+					hasListViewSupport && hasSelectedInnerBlock,
+			} ) }
+			isPressed={ isSelected || hasSelectedInnerBlock }
 			onClick={ async () => {
 				await selectBlock( clientId );
 				if ( onSelect ) {
