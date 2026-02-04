@@ -187,16 +187,16 @@ const CurrentTrack = ( {
 		const hoverInstance = new WaveformPlayer( hoverContainer );
 		hoverInstanceRef.current = hoverInstance;
 
-		// Apply background color to SVG icons for contrast.
-		const svgPaths = baseContainer.querySelectorAll( 'svg path' );
-		svgPaths.forEach( ( path ) => {
-			path.style.fill = bgColor;
-		} );
+		// Set icon color via CSS variable so it persists when icon changes.
+		const playBtn = baseContainer.querySelector( '.waveform-btn' );
+		if ( playBtn ) {
+			playBtn.style.setProperty(
+				'--wp-block-playlist-icon-color',
+				bgColor
+			);
 
-		// Use album art as the play button background if available.
-		if ( track?.image ) {
-			const playBtn = baseContainer.querySelector( '.waveform-btn' );
-			if ( playBtn ) {
+			// Use album art as the play button background if available.
+			if ( track?.image ) {
 				playBtn.style.backgroundImage = `url(${ track.image })`;
 				playBtn.style.backgroundSize = 'cover';
 				playBtn.style.backgroundPosition = 'center';

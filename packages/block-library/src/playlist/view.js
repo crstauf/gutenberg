@@ -285,15 +285,15 @@ const { state } = store(
 				const hoverInstance = new WaveformPlayer( hoverContainer );
 				hoverInstances.set( ref, hoverInstance );
 
-				// Apply background color to SVG icons for contrast.
-				const svgPaths = baseContainer.querySelectorAll( 'svg path' );
-				svgPaths.forEach( ( path ) => {
-					path.style.fill = bgColor;
-				} );
-
 				// Enhance play button accessibility and styling.
 				const playBtn = baseContainer.querySelector( '.waveform-btn' );
 				if ( playBtn ) {
+					// Set icon color via CSS variable so it persists when icon changes.
+					playBtn.style.setProperty(
+						'--wp-block-playlist-icon-color',
+						bgColor
+					);
+
 					playBtn.setAttribute(
 						'aria-label',
 						track.ariaLabel || track.title || 'Play'

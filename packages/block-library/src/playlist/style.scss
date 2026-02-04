@@ -123,10 +123,14 @@ $waveform-button-size: 100px;
 		margin: 0;
 		position: relative;
 
-		// Make play/pause icons larger.
+		// Make play/pause icons larger and set icon color via CSS variable.
 		svg {
 			width: 48px;
 			height: 48px;
+
+			path {
+				fill: var(--wp-block-playlist-icon-color, currentColor) !important;
+			}
 		}
 
 		// Semi-transparent overlay for better icon contrast on album art.
