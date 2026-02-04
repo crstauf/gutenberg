@@ -2018,7 +2018,7 @@ class Navigation {
 	}
 
 	getNavBlockInserter() {
-		return this.getNavBlock().getByLabel( 'Add block' ).first();
+		return this.getNavBlock().getByLabel( 'Add page' ).first();
 	}
 
 	getSubmenuBlockInserter() {
