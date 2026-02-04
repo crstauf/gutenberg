@@ -17,7 +17,9 @@ import { TAB_SETTINGS, TAB_STYLES, TAB_LIST_VIEW, TAB_CONTENT } from './utils';
 import SettingsTab from './settings-tab';
 import StylesTab from './styles-tab';
 import ContentTab from './content-tab';
-import InspectorControls from '../inspector-controls';
+import InspectorControls, {
+	ListViewContentPanelSlot,
+} from '../inspector-controls';
 import { unlock } from '../../lock-unlock';
 
 const { Tabs } = unlock( componentsPrivateApis );
@@ -94,6 +96,7 @@ export default function InspectorControlsTabs( {
 				<Tabs.TabPanel tabId={ TAB_LIST_VIEW.name } focusable={ false }>
 					<ContentTab contentClientIds={ contentClientIds } />
 					<InspectorControls.Slot group="list" />
+					<ListViewContentPanelSlot />
 				</Tabs.TabPanel>
 				<Tabs.TabPanel tabId={ TAB_SETTINGS.name } focusable={ false }>
 					<SettingsTab showAdvancedControls={ !! blockName } />

@@ -22,7 +22,10 @@ import BlockVariationTransforms from '../block-variation-transforms';
 import useBlockDisplayInformation from '../use-block-display-information';
 import { store as blockEditorStore } from '../../store';
 import BlockStyles from '../block-styles';
-import { default as InspectorControls } from '../inspector-controls';
+import {
+	default as InspectorControls,
+	ListViewContentPanelSlot,
+} from '../inspector-controls';
 import { default as InspectorControlsTabs } from '../inspector-controls-tabs';
 import useInspectorControlsTabs from '../inspector-controls-tabs/use-inspector-controls-tabs';
 import InspectorControlsLastItem from '../inspector-controls/last-item';
@@ -365,6 +368,7 @@ const BlockInspectorSingleBlock = ( {
 					<ContentTab contentClientIds={ contentClientIds } />
 					<InspectorControls.Slot group="content" />
 					<InspectorControls.Slot group="list" />
+					<ListViewContentPanelSlot />
 					{ ! isSectionBlock && (
 						<StyleInspectorSlots blockName={ blockName } />
 					) }

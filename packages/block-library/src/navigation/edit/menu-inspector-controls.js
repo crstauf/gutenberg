@@ -6,19 +6,14 @@ import {
 	InspectorControls,
 	store as blockEditorStore,
 } from '@wordpress/block-editor';
-import { useContext } from '@wordpress/element';
 import {
 	PanelBody,
 	__experimentalHStack as HStack,
 	__experimentalHeading as Heading,
 	Spinner,
-	createSlotFill,
-	Popover,
-	__experimentalUseSlotFills as useSlotFills,
 } from '@wordpress/components';
 import { useSelect, useDispatch } from '@wordpress/data';
 import { __, sprintf } from '@wordpress/i18n';
-import { useViewportMatch } from '@wordpress/compose';
 
 /**
  * Internal dependencies
@@ -40,31 +35,7 @@ const BLOCKS_WITH_LINK_UI_SUPPORT = [
 	'core/navigation-link',
 	'core/navigation-submenu',
 ];
-const { PrivateListView, PrivateBlockContext } = unlock(
-	blockEditorPrivateApis
-);
-
-// Create private slot-fill for ListViewContentPanel
-const LIST_VIEW_CONTENT_PANEL_SLOT = Symbol( 'ListViewContentPanel' );
-const {
-	Fill: ListViewContentPanelFillInternal,
-	Slot: ListViewContentPanelSlot,
-} = createSlotFill( LIST_VIEW_CONTENT_PANEL_SLOT );
-
-// Hook to determine popover placement for inspector controls
-function useInspectorPopoverPlacement() {
-	const isMobile = useViewportMatch( 'medium', '<' );
-	return ! isMobile
-		? {
-				popoverProps: {
-					placement: 'left-start',
-					// For non-mobile, inner sidebar width (248px) - button width (24px) - border (1px) + padding (16px) + spacing (20px)
-					// offset: 259,
-					offset: 35,
-				},
-		  }
-		: {};
-}
+const { PrivateListView } = unlock( blockEditorPrivateApis );
 
 function AdditionalBlockContent( { block, insertedBlock, setInsertedBlock } ) {
 	const { updateBlockAttributes, removeBlock } =
@@ -162,50 +133,6 @@ function AdditionalBlockContent( { block, insertedBlock, setInsertedBlock } ) {
 	);
 }
 
-function ListViewContentPanel( { rootClientId } ) {
-	// Check if any fills are registered for this slot
-	const fills = useSlotFills( LIST_VIEW_CONTENT_PANEL_SLOT );
-	const { hasSelectedChildBlock } = useSelect(
-		( select ) => {
-			const { hasSelectedInnerBlock } = select( blockEditorStore );
-			return {
-				hasSelectedChildBlock: hasSelectedInnerBlock(
-					rootClientId,
-					true /* deep: */
-				),
-			};
-		},
-		[ rootClientId ]
-	);
-
-	const { popoverProps } = useInspectorPopoverPlacement();
-
-	// Don't render if no fills are registered or no child block is selected
-	if ( ! fills?.length || ! hasSelectedChildBlock ) {
-		return null;
-	}
-
-	return (
-		<Popover { ...( popoverProps ?? {} ) }>
-			<ListViewContentPanelSlot bubblesVirtually />
-		</Popover>
-	);
-}
-
-// Wrapper component that conditionally renders based on selection context
-export function ListViewContentPanelFill( props ) {
-	const { isSelectionWithinCurrentSection } =
-		useContext( PrivateBlockContext );
-
-	// When inside a section, render to the popover panel slot
-	if ( isSelectionWithinCurrentSection ) {
-		return <ListViewContentPanelFillInternal { ...props } />;
-	}
-
-	// When outside a section, render to standard inspector controls
-	return <InspectorControls { ...props } />;
-}
-
 const MainContent = ( {
 	clientId,
 	currentMenuId,
@@ -213,8 +140,6 @@ const MainContent = ( {
 	isNavigationMenuMissing,
 	onCreateNew,
 } ) => {
-	const { isSelectionWithinCurrentSection } =
-		useContext( PrivateBlockContext );
 	const hasChildren = useSelect(
 		( select ) => {
 			return !! select( blockEditorStore ).getBlockCount( clientId );
@@ -259,9 +184,6 @@ const MainContent = ( {
 				blockSettingsMenu={ LeafMoreMenu }
 				additionalBlockContent={ AdditionalBlockContent }
 			/>
-			{ isSelectionWithinCurrentSection && (
-				<ListViewContentPanel rootClientId={ clientId } />
-			) }
 		</div>
 	);
 };

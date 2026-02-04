@@ -21,3 +21,7 @@ InspectorAdvancedControls.slotName = 'InspectorAdvancedControls';
  * @see https://github.com/WordPress/gutenberg/blob/HEAD/packages/block-editor/src/components/inspector-controls/README.md
  */
 export default InspectorControls;
+export {
+	ListViewContentPanelFill,
+	ListViewContentPanelSlot,
+} from './list-view-content-panel';

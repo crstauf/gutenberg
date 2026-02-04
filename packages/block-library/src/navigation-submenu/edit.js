@@ -19,6 +19,7 @@ import {
 	useBlockEditingMode,
 	store as blockEditorStore,
 	getColorClassName,
+	privateApis as blockEditorPrivateApis,
 } from '@wordpress/block-editor';
 import { isURL, prependHTTP } from '@wordpress/url';
 import { useState, useEffect, useRef } from '@wordpress/element';
@@ -31,7 +32,7 @@ import { useMergeRefs, usePrevious } from '@wordpress/compose';
  * Internal dependencies
  */
 import { ItemSubmenuIcon } from './icons';
-import { ListViewContentPanelFill } from '../navigation/edit/menu-inspector-controls';
+import { unlock } from '../lock-unlock';
 import {
 	Controls,
 	LinkUI,
@@ -49,6 +50,8 @@ import {
 } from '../navigation/edit/utils';
 import { DEFAULT_BLOCK } from '../navigation/constants';
 import { getSubmenuVisibility } from '../navigation/utils/get-submenu-visibility';
+
+const { ListViewContentPanelFill } = unlock( blockEditorPrivateApis );
 
 const ALLOWED_BLOCKS = [
 	'core/navigation-link',

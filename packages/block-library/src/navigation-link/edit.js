@@ -22,6 +22,7 @@ import {
 	store as blockEditorStore,
 	getColorClassName,
 	useInnerBlocksProps,
+	privateApis as blockEditorPrivateApis,
 } from '@wordpress/block-editor';
 import { isURL, prependHTTP } from '@wordpress/url';
 import { useState, useEffect, useRef, useCallback } from '@wordpress/element';
@@ -32,7 +33,7 @@ import { useMergeRefs, useInstanceId } from '@wordpress/compose';
  * Internal dependencies
  */
 import { getColors } from '../navigation/edit/utils';
-import { ListViewContentPanelFill } from '../navigation/edit/menu-inspector-controls';
+import { unlock } from '../lock-unlock';
 import {
 	Controls,
 	LinkUI,
@@ -45,6 +46,8 @@ import {
 	useIsDraggingWithin,
 	selectLabelText,
 } from './shared';
+
+const { ListViewContentPanelFill } = unlock( blockEditorPrivateApis );
 
 const DEFAULT_BLOCK = { name: 'core/navigation-link' };
 const NESTING_BLOCK_NAMES = [
