@@ -61,7 +61,7 @@ function ListViewContentPanelSlot( { listSlotRef } ) {
 
 		// Query for the list view row within the list slot only
 		// Using the stable data-block attribute and is-selected class
-		const selector = `[data-block="${ selectedClientId }"]`;
+		const selector = `[role=row][data-block="${ selectedClientId }"].is-selected`;
 		const element = listSlotRef.current.querySelector( selector );
 
 		setAnchorElement( element );
