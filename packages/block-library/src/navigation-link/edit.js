@@ -17,7 +17,6 @@ import { displayShortcut, isKeyboardEvent } from '@wordpress/keycodes';
 import { __, sprintf } from '@wordpress/i18n';
 import {
 	BlockControls,
-	InspectorControls,
 	RichText,
 	useBlockProps,
 	store as blockEditorStore,
@@ -33,6 +32,7 @@ import { useMergeRefs, useInstanceId } from '@wordpress/compose';
  * Internal dependencies
  */
 import { getColors } from '../navigation/edit/utils';
+import { ListViewContentPanelFill } from '../navigation/edit/menu-inspector-controls';
 import {
 	Controls,
 	LinkUI,
@@ -391,20 +391,13 @@ export default function NavigationLinkEdit( {
 					) }
 				</ToolbarGroup>
 			</BlockControls>
-			<InspectorControls>
+			<ListViewContentPanelFill>
 				<Controls
 					attributes={ attributes }
 					setAttributes={ setAttributes }
 					clientId={ clientId }
 				/>
-			</InspectorControls>
-			<InspectorControls>
-				<Controls
-					attributes={ attributes }
-					setAttributes={ setAttributes }
-					clientId={ clientId }
-				/>
-			</InspectorControls>
+			</ListViewContentPanelFill>
 			<div { ...blockProps }>
 				{ hasMissingEntity && (
 					<VisuallyHidden id={ missingEntityDescriptionId }>

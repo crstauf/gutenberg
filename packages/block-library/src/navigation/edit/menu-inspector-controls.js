@@ -46,8 +46,10 @@ const { PrivateListView, PrivateBlockContext } = unlock(
 
 // Create private slot-fill for ListViewContentPanel
 const LIST_VIEW_CONTENT_PANEL_SLOT = Symbol( 'ListViewContentPanel' );
-const { Fill: ListViewContentPanelFill, Slot: ListViewContentPanelSlot } =
-	createSlotFill( LIST_VIEW_CONTENT_PANEL_SLOT );
+const {
+	Fill: ListViewContentPanelFillInternal,
+	Slot: ListViewContentPanelSlot,
+} = createSlotFill( LIST_VIEW_CONTENT_PANEL_SLOT );
 
 // Hook to determine popover placement for inspector controls
 function useInspectorPopoverPlacement() {
@@ -185,16 +187,24 @@ function ListViewContentPanel( { rootClientId } ) {
 
 	return (
 		<Popover { ...( popoverProps ?? {} ) }>
-			<ListViewContentPanelSlot />
+			<ListViewContentPanelSlot bubblesVirtually />
 		</Popover>
 	);
 }
 
-// Attach Slot to Fill following Gutenberg slot-fill pattern
-ListViewContentPanelFill.Slot = ListViewContentPanel;
+// Wrapper component that conditionally renders based on selection context
+export function ListViewContentPanelFill( props ) {
+	const { isSelectionWithinCurrentSection } =
+		useContext( PrivateBlockContext );
 
-// Export the Fill component for use by other components
-export { ListViewContentPanelFill };
+	// When inside a section, render to the popover panel slot
+	if ( isSelectionWithinCurrentSection ) {
+		return <ListViewContentPanelFillInternal { ...props } />;
+	}
+
+	// When outside a section, render to standard inspector controls
+	return <InspectorControls { ...props } />;
+}
 
 const MainContent = ( {
 	clientId,

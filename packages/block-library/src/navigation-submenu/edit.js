@@ -14,7 +14,6 @@ import {
 	BlockControls,
 	InnerBlocks,
 	useInnerBlocksProps,
-	InspectorControls,
 	RichText,
 	useBlockProps,
 	useBlockEditingMode,
@@ -32,6 +31,7 @@ import { useMergeRefs, usePrevious } from '@wordpress/compose';
  * Internal dependencies
  */
 import { ItemSubmenuIcon } from './icons';
+import { ListViewContentPanelFill } from '../navigation/edit/menu-inspector-controls';
 import {
 	Controls,
 	LinkUI,
@@ -333,13 +333,13 @@ export default function NavigationSubmenuEdit( {
 					/>
 				</ToolbarGroup>
 			</BlockControls>
-			<InspectorControls>
+			<ListViewContentPanelFill>
 				<Controls
 					attributes={ attributes }
 					setAttributes={ setAttributes }
 					clientId={ clientId }
 				/>
-			</InspectorControls>
+			</ListViewContentPanelFill>
 			<div { ...blockProps }>
 				<ParentElement className="wp-block-navigation-item__content">
 					{ ! isInvalid && ! isDraft && (
