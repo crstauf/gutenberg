@@ -6,8 +6,9 @@ import {
 	Popover,
 	__experimentalUseSlotFills as useSlotFills,
 } from '@wordpress/components';
-import { useContext } from '@wordpress/element';
+import { useContext, useState, useEffect } from '@wordpress/element';
 import { useViewportMatch } from '@wordpress/compose';
+import { useSelect } from '@wordpress/data';
 
 /**
  * Internal dependencies
@@ -18,6 +19,7 @@ import {
 	useBlockEditContext,
 	mayDisplayControlsKey,
 } from '../block-edit/context';
+import { store as blockEditorStore } from '../../store';
 
 // Create private slot-fill for ListViewContentPanel
 const LIST_VIEW_CONTENT_PANEL_SLOT = Symbol( 'ListViewContentPanel' );
@@ -42,12 +44,39 @@ function ListViewContentPanelSlot() {
 	const fills = useSlotFills( LIST_VIEW_CONTENT_PANEL_SLOT );
 	const hasFills = Boolean( fills && fills.length );
 
+	// Get the first selected block client ID
+	const selectedClientId = useSelect( ( select ) => {
+		const { getSelectedBlockClientId } = select( blockEditorStore );
+		return getSelectedBlockClientId();
+	}, [] );
+
+	// Query DOM for the selected block row element in List View
+	const [ anchorElement, setAnchorElement ] = useState( null );
+
+	useEffect( () => {
+		if ( ! selectedClientId ) {
+			setAnchorElement( null );
+			return;
+		}
+
+		// Query for the list view row with the selected block
+		// Using the stable data-block attribute and is-selected class
+		const selector = `[role=row][data-block="${ selectedClientId }"].is-selected`;
+		const element = document.querySelector( selector );
+
+		setAnchorElement( element );
+	}, [ selectedClientId ] );
+
 	if ( ! hasFills ) {
 		return null;
 	}
 
 	return (
-		<Popover { ...( popoverProps ?? {} ) }>
+		<Popover
+			{ ...( popoverProps ?? {} ) }
+			anchor={ anchorElement }
+			placement="right-start"
+		>
 			<div style={ { width: '280px' } }>
 				<Slot bubblesVirtually />
 			</div>
