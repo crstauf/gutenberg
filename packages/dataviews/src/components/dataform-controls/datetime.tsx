@@ -56,8 +56,9 @@ function CalendarDateTimeControl< Item >( {
 	} );
 
 	const inputControlRef = useRef< HTMLInputElement >( null );
-	const validationTimeoutRef = useRef< ReturnType< typeof setTimeout > >();
-	const previousFocusRef = useRef< Element | null >( null );
+	const validationTimeoutRef =
+		useRef< ReturnType< typeof setTimeout > >( null );
+	const previousFocusRef = useRef< Element >( null );
 
 	const onChangeCallback = useCallback(
 		( newValue: string | undefined ) =>

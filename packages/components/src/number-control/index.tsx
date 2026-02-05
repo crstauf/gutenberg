@@ -72,7 +72,7 @@ function UnforwardedNumberControl(
 			version: '6.3',
 		} );
 	}
-	const inputRef = useRef< HTMLInputElement >();
+	const inputRef = useRef< HTMLInputElement >( null );
 	const mergedRef = useMergeRefs( [ inputRef, forwardedRef ] );
 
 	const isStepAny = step === 'any';
@@ -205,7 +205,7 @@ function UnforwardedNumberControl(
 					  constrainValue( currentValue );
 			}
 
-			return nextState;
+			return stateReducerProp?.( nextState, action ) ?? nextState;
 		};
 
 	const buildSpinButtonClickHandler =
@@ -236,12 +236,8 @@ function UnforwardedNumberControl(
 			required={ required }
 			step={ step }
 			type={ typeProp }
-			// @ts-expect-error TODO: Resolve discrepancy between `value` types in InputControl based components
 			value={ valueProp }
-			__unstableStateReducer={ ( state, action ) => {
-				const baseState = numberControlStateReducer( state, action );
-				return stateReducerProp?.( baseState, action ) ?? baseState;
-			} }
+			__unstableStateReducer={ numberControlStateReducer }
 			size={ size }
 			__shouldNotWarnDeprecated36pxSize
 			suffix={
