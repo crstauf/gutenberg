@@ -316,7 +316,7 @@ const BlockInspectorSingleBlock = ( {
 	hasBlockStyles,
 	editedContentOnlySection,
 } ) => {
-	const listSlotRef = useRef( null );
+	const listViewRef = useRef( null );
 	const hasMultipleTabs = availableTabs?.length > 1;
 	const hasParentChildBlockCards =
 		editedContentOnlySection &&
@@ -367,8 +367,8 @@ const BlockInspectorSingleBlock = ( {
 					) }
 					<ContentTab contentClientIds={ contentClientIds } />
 					<InspectorControls.Slot group="content" />
-					<InspectorControls.Slot group="list" ref={ listSlotRef } />
-					<ListViewContentPopover listSlotRef={ listSlotRef } />
+					<InspectorControls.Slot group="list" ref={ listViewRef } />
+					<ListViewContentPopover listViewRef={ listViewRef } />
 					{ ! isSectionBlock && (
 						<StyleInspectorSlots blockName={ blockName } />
 					) }
