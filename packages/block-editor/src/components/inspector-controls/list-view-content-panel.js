@@ -83,6 +83,12 @@ function ListViewContentPanelSlot( { listSlotRef } ) {
 		return null;
 	}
 
+	// The slot rendered in the popover doesn't use `bubblesVirtually`, this has a downside
+	// that certain context providers (like `BlockEditContext`) are not available
+	// to fills.
+	// The upside is that it allows nested popovers to function correctly. If `bubblesVirtually`
+	// is set opening a nest popover triggers the `onFocusOutside` of this popover and closes it.
+	// Is there a solution that has no trade-offs?
 	return (
 		<Popover
 			{ ...( popoverProps ?? {} ) }
