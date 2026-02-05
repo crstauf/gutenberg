@@ -20,6 +20,11 @@ function appendRequiredIndicator(
 	required: boolean | undefined,
 	markWhenOptional: boolean | undefined
 ) {
+	// Don't append anything to empty labels.
+	if ( label === undefined ) {
+		return label;
+	}
+
 	if ( required && ! markWhenOptional ) {
 		return (
 			<>
