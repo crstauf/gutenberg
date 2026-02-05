@@ -32,21 +32,43 @@ const noop = () => {};
 let hasLoggedFallback = false;
 
 /**
+ * Cached result of whether client-side media processing should be enabled.
+ * This is computed once per session for efficiency and stability.
+ */
+let isClientSideMediaEnabledCache = null;
+
+/**
  * Checks if client-side media processing should be enabled.
  *
  * Returns true only if:
  * 1. The experimental media processing flag is enabled
  * 2. The browser supports WebAssembly, SharedArrayBuffer, cross-origin isolation, and CSP allows blob workers
  *
+ * The result is cached for the session to ensure stability during React renders.
+ *
  * @return {boolean} Whether client-side media processing should be enabled.
  */
 function shouldEnableClientSideMediaProcessing() {
+	// Return cached result if available.
+	if ( isClientSideMediaEnabledCache !== null ) {
+		return isClientSideMediaEnabledCache;
+	}
+
+	// Check if experimental flag is enabled.
 	if ( ! window.__experimentalMediaProcessing ) {
+		isClientSideMediaEnabledCache = false;
+		return false;
+	}
+
+	// Check browser support.
+	// Safety check in case the import is unavailable.
+	if ( typeof detectClientSideMediaSupport !== 'function' ) {
+		isClientSideMediaEnabledCache = false;
 		return false;
 	}
 
 	const detection = detectClientSideMediaSupport();
-	if ( ! detection.supported ) {
+	if ( ! detection || ! detection.supported ) {
 		// Only log once per session to avoid console spam.
 		if ( ! hasLoggedFallback ) {
 			// eslint-disable-next-line no-console
@@ -55,9 +77,11 @@ function shouldEnableClientSideMediaProcessing() {
 			);
 			hasLoggedFallback = true;
 		}
+		isClientSideMediaEnabledCache = false;
 		return false;
 	}
 
+	isClientSideMediaEnabledCache = true;
 	return true;
 }
 
