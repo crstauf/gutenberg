@@ -7,7 +7,6 @@ import { SlotFillProvider } from '@wordpress/components';
 import {
 	MediaUploadProvider,
 	store as uploadStore,
-	detectClientSideMediaSupport,
 } from '@wordpress/upload-media';
 
 /**
@@ -54,13 +53,24 @@ function shouldEnableClientSideMediaProcessing() {
 		return isClientSideMediaEnabledCache;
 	}
 
-	// Check if experimental flag is enabled.
+	// Check if experimental flag is enabled first (before any dynamic imports).
 	if ( ! window.__experimentalMediaProcessing ) {
 		isClientSideMediaEnabledCache = false;
 		return false;
 	}
 
-	// Check browser support.
+	// Dynamically require the feature detection to avoid module loading issues.
+	// This ensures the feature detection code only loads when actually needed.
+	let detectClientSideMediaSupport;
+	try {
+		( {
+			detectClientSideMediaSupport,
+		} = require( '@wordpress/upload-media' ) );
+	} catch {
+		isClientSideMediaEnabledCache = false;
+		return false;
+	}
+
 	// Safety check in case the import is unavailable.
 	if ( typeof detectClientSideMediaSupport !== 'function' ) {
 		isClientSideMediaEnabledCache = false;
