@@ -4,10 +4,9 @@
 import { useDispatch } from '@wordpress/data';
 import { useEffect, useMemo } from '@wordpress/element';
 import { SlotFillProvider } from '@wordpress/components';
-import {
-	MediaUploadProvider,
-	store as uploadStore,
-} from '@wordpress/upload-media';
+import * as uploadMedia from '@wordpress/upload-media';
+
+const { MediaUploadProvider, store: uploadStore } = uploadMedia;
 
 /**
  * Internal dependencies
@@ -53,25 +52,16 @@ function shouldEnableClientSideMediaProcessing() {
 		return isClientSideMediaEnabledCache;
 	}
 
-	// Check if experimental flag is enabled first (before any dynamic imports).
+	// Check if experimental flag is enabled first.
 	if ( ! window.__experimentalMediaProcessing ) {
 		isClientSideMediaEnabledCache = false;
 		return false;
 	}
 
-	// Dynamically require the feature detection to avoid module loading issues.
-	// This ensures the feature detection code only loads when actually needed.
-	let detectClientSideMediaSupport;
-	try {
-		( {
-			detectClientSideMediaSupport,
-		} = require( '@wordpress/upload-media' ) );
-	} catch {
-		isClientSideMediaEnabledCache = false;
-		return false;
-	}
-
-	// Safety check in case the import is unavailable.
+	// Check if detectClientSideMediaSupport is available.
+	// Using optional chaining to safely access the function from the module.
+	const detectClientSideMediaSupport =
+		uploadMedia.detectClientSideMediaSupport;
 	if ( typeof detectClientSideMediaSupport !== 'function' ) {
 		isClientSideMediaEnabledCache = false;
 		return false;
