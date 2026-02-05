@@ -91,7 +91,7 @@ function ListViewContentPanelSlot( { listSlotRef } ) {
 			onClose={ closeListViewContentPanel }
 		>
 			<div style={ { width: '280px' } }>
-				<Slot bubblesVirtually />
+				<Slot />
 			</div>
 		</Popover>
 	);
