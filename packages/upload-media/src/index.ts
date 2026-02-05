@@ -14,4 +14,5 @@ export {
 } from './error-messages';
 
 export type { ErrorMessageConfig } from './error-messages';
-export type { ImageFormat, RetrySettings, ItemStatus } from './store/types';
+export { ItemStatus } from './store/types';
+export type { ImageFormat, RetrySettings } from './store/types';
