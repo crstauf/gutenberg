@@ -34,6 +34,7 @@ function useInspectorPopoverPlacement() {
 				popoverProps: {
 					placement: 'left-start',
 					offset: 35,
+					resize: false,
 				},
 		  }
 		: {};
@@ -93,7 +94,6 @@ function ListViewContentPanelSlot( { listSlotRef } ) {
 		<Popover
 			{ ...( popoverProps ?? {} ) }
 			anchor={ anchorElement }
-			placement="right-start"
 			onClose={ closeListViewContentPanel }
 		>
 			<div style={ { width: '280px' } }>
