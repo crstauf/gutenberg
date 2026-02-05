@@ -6,7 +6,7 @@ import {
 	Popover,
 	__experimentalUseSlotFills as useSlotFills,
 } from '@wordpress/components';
-import { useContext, useState, useEffect } from '@wordpress/element';
+import { useContext, useState, useLayoutEffect } from '@wordpress/element';
 import { useViewportMatch } from '@wordpress/compose';
 import { useSelect, useDispatch } from '@wordpress/data';
 
@@ -60,16 +60,18 @@ export function ListViewContentPopover( { listViewRef } ) {
 	// Query DOM for the selected block row element in List View
 	const [ anchorElement, setAnchorElement ] = useState( null );
 
-	useEffect( () => {
+	useLayoutEffect( () => {
 		if ( ! selectedClientId || ! listViewRef?.current ) {
 			setAnchorElement( null );
 			return;
 		}
 
-		// Query for the list view row within the list slot only
-		// Using the stable data-block attribute and is-selected class
-		const selector = `[role=row][data-block="${ selectedClientId }"].is-selected`;
-		const element = listViewRef.current.querySelector( selector );
+		// Query for the block in list view to anchor the popover.
+		// Ensures the vertical positioning of the popover matches the
+		// selected block in List View.
+		const element = listViewRef.current.querySelector(
+			`[data-block="${ selectedClientId }"]`
+		);
 
 		setAnchorElement( element );
 	}, [ selectedClientId, listViewRef ] );
