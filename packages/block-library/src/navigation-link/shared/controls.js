@@ -15,7 +15,10 @@ import { __unstableStripHTML as stripHTML } from '@wordpress/dom';
 import {
 	privateApis as blockEditorPrivateApis,
 	store as blockEditorStore,
+<<<<<<< HEAD
 	useBlockEditingMode,
+=======
+>>>>>>> b9d88423124 (Fix block editing mode)
 } from '@wordpress/block-editor';
 import { useSelect } from '@wordpress/data';
 import { store as coreStore } from '@wordpress/core-data';
@@ -159,7 +162,13 @@ export function Controls( { attributes, setAttributes, clientId } ) {
 			?.home;
 	}, [] );
 
-	const isContentOnly = useBlockEditingMode() === 'contentOnly';
+	const blockEditingMode = useSelect(
+		( select ) =>
+			select( blockEditorStore ).getBlockEditingMode( clientId ),
+		[ clientId ]
+	);
+
+	const isContentOnly = blockEditingMode === 'contentOnly';
 
 	const preview = useLinkPreview( {
 		url,
