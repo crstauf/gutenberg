@@ -22,6 +22,8 @@ import {
 import { store as blockEditorStore } from '../../store';
 import { unlock } from '../../lock-unlock';
 
+/** @typedef {import('@wordpress/element').RefObject} RefObject */
+
 // Create private slot-fill for ListViewContentPanel
 const LIST_VIEW_CONTENT_PANEL_SLOT = Symbol( 'ListViewContentPopover' );
 const { Fill, Slot } = createSlotFill( LIST_VIEW_CONTENT_PANEL_SLOT );
@@ -40,13 +42,20 @@ function useInspectorPopoverPlacement() {
 		: {};
 }
 
-// Internal Slot component that renders the popover panel
+/**
+ * Displays a popover for the List View block inspector support.
+ * Blocks can use this via the `ListViewContentPopoverFill` to display their
+ * controls in a Popover when a ListView item is clicked.
+ *
+ * @param {Object}                 props
+ * @param {RefObject<HTMLElement>} props.listViewRef Ref to the List View slot for the block inspector.
+ */
 export function ListViewContentPopover( { listViewRef } ) {
 	const { popoverProps } = useInspectorPopoverPlacement();
 	const fills = useSlotFills( LIST_VIEW_CONTENT_PANEL_SLOT );
 	const hasFills = Boolean( fills && fills.length );
 
-	// Get both the selected client ID and the popover open state
+	// Get both the selected client ID and the popover open state.
 	const { selectedClientId, isOpen } = useSelect( ( select ) => {
 		const { getSelectedBlockClientId } = select( blockEditorStore );
 		const privateSelectors = unlock( select( blockEditorStore ) );
@@ -57,7 +66,7 @@ export function ListViewContentPopover( { listViewRef } ) {
 		};
 	}, [] );
 
-	// Query DOM for the selected block row element in List View
+	// Query DOM for the selected block row element in List View.
 	const [ anchorElement, setAnchorElement ] = useState( null );
 
 	useLayoutEffect( () => {
@@ -81,7 +90,7 @@ export function ListViewContentPopover( { listViewRef } ) {
 		useDispatch( blockEditorStore )
 	);
 
-	// Only render when explicitly open
+	// Only render when explicitly open.
 	if ( ! isOpen || ! hasFills || ! anchorElement ) {
 		return null;
 	}
@@ -105,12 +114,22 @@ export function ListViewContentPopover( { listViewRef } ) {
 	);
 }
 
-// Wrapper component that conditionally renders based on selection context
+/**
+ * A fill for blocks to show their content controls.
+ *
+ * If the block is a child of a block that supports ListView and is being
+ * displayed within a `Section`, then the controls will display in a popover
+ * whenever a ListView item is selected.
+ *
+ * When outside of a section fallback to a standard  `InspectorControls`.
+ *
+ * @param {Object} props
+ */
 export function ListViewContentPopoverFill( props ) {
 	const blockEditContext = useBlockEditContext();
 	const privateBlockContext = useContext( PrivateBlockContext );
 
-	// Only render for selected blocks (same as InspectorControlsFill)
+	// Only render for selected blocks (same as InspectorControlsFill).
 	if ( ! blockEditContext[ mayDisplayControlsKey ] ) {
 		return null;
 	}
@@ -123,6 +142,6 @@ export function ListViewContentPopoverFill( props ) {
 		return <Fill { ...props } />;
 	}
 
-	// When outside a section, render to standard inspector controls
+	// When outside a section, render to standard inspector controls.
 	return <InspectorControlsFill { ...props } />;
 }
