@@ -4,7 +4,7 @@
 import { __ } from '@wordpress/i18n';
 import { useSelect, useDispatch } from '@wordpress/data';
 import { __experimentalVStack as VStack } from '@wordpress/components';
-import { useRef } from '@wordpress/element';
+import { useRef, useMemo } from '@wordpress/element';
 import { useViewportMatch } from '@wordpress/compose';
 import { comment as commentIcon } from '@wordpress/icons';
 import { store as blockEditorStore } from '@wordpress/block-editor';
@@ -85,7 +85,7 @@ function NotesSidebar( { postId } ) {
 	const isLargeViewport = useViewportMatch( 'medium' );
 	const commentSidebarRef = useRef( null );
 
-	const { clientId, blockNoteIds } = useSelect( ( select ) => {
+	const { clientId, rawNoteId } = useSelect( ( select ) => {
 		const { getBlockAttributes, getSelectedBlockClientId } =
 			select( blockEditorStore );
 		const _clientId = getSelectedBlockClientId();
@@ -94,9 +94,14 @@ function NotesSidebar( { postId } ) {
 			: null;
 		return {
 			clientId: _clientId,
-			blockNoteIds: getNoteIdsFromMetadata( metadata ),
+			rawNoteId: metadata?.noteId ?? null,
 		};
 	}, [] );
+
+	const blockNoteIds = useMemo(
+		() => getNoteIdsFromMetadata( { noteId: rawNoteId } ),
+		[ rawNoteId ]
+	);
 	const { isDistractionFree } = useSelect( ( select ) => {
 		const { get } = select( preferencesStore );
 		return {
