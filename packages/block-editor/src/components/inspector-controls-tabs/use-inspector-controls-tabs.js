@@ -84,11 +84,7 @@ export default function useInspectorControlsTabs(
 		...( hasListFills && hasStyleFills > 1 ? advancedFills : [] ),
 	];
 
-	// Only show the content tab when the block fields experiment is active.
-	const shouldShowBlockFields =
-		window?.__experimentalContentOnlyInspectorFields;
-	const hasContentTab = shouldShowBlockFields && hasContentFills;
-
+	const hasContentTab = ! isSectionBlock && hasContentFills;
 	if ( hasContentTab ) {
 		tabs.push( TAB_CONTENT );
 	}
