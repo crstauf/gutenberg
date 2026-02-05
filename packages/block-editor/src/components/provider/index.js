@@ -4,9 +4,11 @@
 import { useDispatch } from '@wordpress/data';
 import { useEffect, useMemo } from '@wordpress/element';
 import { SlotFillProvider } from '@wordpress/components';
-import * as uploadMedia from '@wordpress/upload-media';
-
-const { MediaUploadProvider, store: uploadStore } = uploadMedia;
+import {
+	MediaUploadProvider,
+	store as uploadStore,
+	detectClientSideMediaSupport,
+} from '@wordpress/upload-media';
 
 /**
  * Internal dependencies
@@ -58,10 +60,7 @@ function shouldEnableClientSideMediaProcessing() {
 		return false;
 	}
 
-	// Check if detectClientSideMediaSupport is available.
-	// Using optional chaining to safely access the function from the module.
-	const detectClientSideMediaSupport =
-		uploadMedia.detectClientSideMediaSupport;
+	// Safety check in case the import is unavailable.
 	if ( typeof detectClientSideMediaSupport !== 'function' ) {
 		isClientSideMediaEnabledCache = false;
 		return false;
