@@ -640,6 +640,62 @@ function getInterlacedSetting(
 }
 
 /**
+ * Determines if an image should be transcoded to a different format.
+ *
+ * Handles PNG to JPEG conversion carefully by checking for transparency
+ * to preserve the alpha channel when needed.
+ *
+ * @param file           The image file.
+ * @param outputMimeType The target output MIME type.
+ * @param settings       Media settings.
+ * @return The transcode operation tuple if transcoding is needed, null otherwise.
+ */
+export async function getTranscodeImageOperation(
+	file: File,
+	outputMimeType: string,
+	settings: Settings
+): Promise<
+	| [
+			OperationType.TranscodeImage,
+			OperationArgs[ OperationType.TranscodeImage ],
+	  ]
+	| null
+> {
+	// For PNG -> JPEG conversion, check if the image has transparency.
+	// If it does, skip transcoding to preserve the alpha channel.
+	if ( file.type === 'image/png' && outputMimeType === 'image/jpeg' ) {
+		const blobUrl = createBlobURL( file );
+		try {
+			const hasAlpha = await vipsHasTransparency( blobUrl );
+			if ( hasAlpha ) {
+				// Image has transparency, skip conversion to JPEG.
+				return null;
+			}
+		} catch {
+			// If transparency check fails, err on the side of caution.
+			return null;
+		} finally {
+			revokeBlobURL( blobUrl );
+		}
+	}
+
+	const formatPart = outputMimeType.split( '/' )[ 1 ];
+	if ( ! isValidImageFormat( formatPart ) ) {
+		// Unknown format, skip transcoding.
+		return null;
+	}
+
+	return [
+		OperationType.TranscodeImage,
+		{
+			outputFormat: formatPart,
+			outputQuality: 0.82,
+			interlaced: getInterlacedSetting( outputMimeType, settings ),
+		},
+	];
+}
+
+/**
  * Prepares an item for initial processing.
  *
  * Determines the list of operations to perform for a given image,
@@ -689,47 +745,13 @@ export function prepareItem( id: QueueItemId ) {
 			// Uses WordPress image_editor_output_format filter settings.
 			const outputMimeType = imageOutputFormats?.[ file.type ];
 			if ( outputMimeType && outputMimeType !== file.type ) {
-				// For PNG -> JPEG conversion, check if the image has transparency.
-				// If it does, skip transcoding to preserve the alpha channel.
-				let shouldTranscode = true;
-
-				if (
-					file.type === 'image/png' &&
-					outputMimeType === 'image/jpeg'
-				) {
-					const blobUrl = createBlobURL( file );
-					try {
-						const hasAlpha = await vipsHasTransparency( blobUrl );
-						if ( hasAlpha ) {
-							// Image has transparency, skip conversion to JPEG.
-							shouldTranscode = false;
-						}
-					} catch {
-						// If transparency check fails, err on the side of caution.
-						shouldTranscode = false;
-					} finally {
-						revokeBlobURL( blobUrl );
-					}
-				}
-
-				if ( shouldTranscode ) {
-					const formatPart = outputMimeType.split( '/' )[ 1 ];
-					if ( ! isValidImageFormat( formatPart ) ) {
-						// Unknown format, skip transcoding.
-						shouldTranscode = false;
-					} else {
-						operations.push( [
-							OperationType.TranscodeImage,
-							{
-								outputFormat: formatPart,
-								outputQuality: 0.82,
-								interlaced: getInterlacedSetting(
-									outputMimeType,
-									settings
-								),
-							},
-						] );
-					}
+				const transcodeOperation = await getTranscodeImageOperation(
+					file,
+					outputMimeType,
+					settings
+				);
+				if ( transcodeOperation ) {
+					operations.push( transcodeOperation );
 				}
 			}
 
