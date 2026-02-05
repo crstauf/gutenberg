@@ -51,7 +51,7 @@ import {
 import { DEFAULT_BLOCK } from '../navigation/constants';
 import { getSubmenuVisibility } from '../navigation/utils/get-submenu-visibility';
 
-const { ListViewContentPanelFill } = unlock( blockEditorPrivateApis );
+const { ListViewContentPopoverFill } = unlock( blockEditorPrivateApis );
 
 const ALLOWED_BLOCKS = [
 	'core/navigation-link',
@@ -336,13 +336,13 @@ export default function NavigationSubmenuEdit( {
 					/>
 				</ToolbarGroup>
 			</BlockControls>
-			<ListViewContentPanelFill>
+			<ListViewContentPopoverFill>
 				<Controls
 					attributes={ attributes }
 					setAttributes={ setAttributes }
 					clientId={ clientId }
 				/>
-			</ListViewContentPanelFill>
+			</ListViewContentPopoverFill>
 			<div { ...blockProps }>
 				<ParentElement className="wp-block-navigation-item__content">
 					{ ! isInvalid && ! isDraft && (

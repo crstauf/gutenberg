@@ -23,7 +23,7 @@ import { store as blockEditorStore } from '../../store';
 import { unlock } from '../../lock-unlock';
 
 // Create private slot-fill for ListViewContentPanel
-const LIST_VIEW_CONTENT_PANEL_SLOT = Symbol( 'ListViewContentPanel' );
+const LIST_VIEW_CONTENT_PANEL_SLOT = Symbol( 'ListViewContentPopover' );
 const { Fill, Slot } = createSlotFill( LIST_VIEW_CONTENT_PANEL_SLOT );
 
 // Hook to determine popover placement for inspector controls
@@ -41,7 +41,7 @@ function useInspectorPopoverPlacement() {
 }
 
 // Internal Slot component that renders the popover panel
-function ListViewContentPanelSlot( { listSlotRef } ) {
+export function ListViewContentPopover( { listViewRef } ) {
 	const { popoverProps } = useInspectorPopoverPlacement();
 	const fills = useSlotFills( LIST_VIEW_CONTENT_PANEL_SLOT );
 	const hasFills = Boolean( fills && fills.length );
@@ -61,7 +61,7 @@ function ListViewContentPanelSlot( { listSlotRef } ) {
 	const [ anchorElement, setAnchorElement ] = useState( null );
 
 	useEffect( () => {
-		if ( ! selectedClientId || ! listSlotRef?.current ) {
+		if ( ! selectedClientId || ! listViewRef?.current ) {
 			setAnchorElement( null );
 			return;
 		}
@@ -69,10 +69,10 @@ function ListViewContentPanelSlot( { listSlotRef } ) {
 		// Query for the list view row within the list slot only
 		// Using the stable data-block attribute and is-selected class
 		const selector = `[role=row][data-block="${ selectedClientId }"].is-selected`;
-		const element = listSlotRef.current.querySelector( selector );
+		const element = listViewRef.current.querySelector( selector );
 
 		setAnchorElement( element );
-	}, [ selectedClientId, listSlotRef ] );
+	}, [ selectedClientId, listViewRef ] );
 
 	// eslint-disable-next-line @wordpress/no-unused-vars-before-return
 	const { closeListViewContentPanel } = unlock(
@@ -104,7 +104,7 @@ function ListViewContentPanelSlot( { listSlotRef } ) {
 }
 
 // Wrapper component that conditionally renders based on selection context
-function ListViewContentPanelFill( props ) {
+export function ListViewContentPopoverFill( props ) {
 	const blockEditContext = useBlockEditContext();
 	const privateBlockContext = useContext( PrivateBlockContext );
 
@@ -124,6 +124,3 @@ function ListViewContentPanelFill( props ) {
 	// When outside a section, render to standard inspector controls
 	return <InspectorControlsFill { ...props } />;
 }
-
-// Export Fill for use by block-library
-export { ListViewContentPanelFill, ListViewContentPanelSlot };

@@ -47,7 +47,7 @@ import {
 	selectLabelText,
 } from './shared';
 
-const { ListViewContentPanelFill } = unlock( blockEditorPrivateApis );
+const { ListViewContentPopoverFill } = unlock( blockEditorPrivateApis );
 
 const DEFAULT_BLOCK = { name: 'core/navigation-link' };
 const NESTING_BLOCK_NAMES = [
@@ -394,13 +394,13 @@ export default function NavigationLinkEdit( {
 					) }
 				</ToolbarGroup>
 			</BlockControls>
-			<ListViewContentPanelFill>
+			<ListViewContentPopoverFill>
 				<Controls
 					attributes={ attributes }
 					setAttributes={ setAttributes }
 					clientId={ clientId }
 				/>
-			</ListViewContentPanelFill>
+			</ListViewContentPopoverFill>
 			<div { ...blockProps }>
 				{ hasMissingEntity && (
 					<VisuallyHidden id={ missingEntityDescriptionId }>

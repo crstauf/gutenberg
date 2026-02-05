@@ -13,7 +13,7 @@ import {
 	normalizeString,
 } from './components/inserter/search-items';
 import { PrivateListView } from './components/list-view';
-import { ListViewContentPanelFill } from './components/inspector-controls';
+import { ListViewContentPopoverFill } from './components/inspector-controls/list-view-content-popover';
 import InspectorControlsLastItem from './components/inspector-controls/last-item';
 import { useHasBlockToolbar } from './components/block-toolbar/use-has-block-toolbar';
 import { cleanEmptyObject } from './hooks/utils';
@@ -84,7 +84,7 @@ lock( privateApis, {
 	getNormalizedSearchTerms,
 	normalizeString,
 	PrivateListView,
-	ListViewContentPanelFill,
+	ListViewContentPopoverFill,
 	ResizableBoxPopover,
 	InspectorControlsLastItem,
 	useHasBlockToolbar,
