@@ -8,36 +8,41 @@ import { useState, useEffect, useRef } from '@wordpress/element';
  */
 import type { View } from '../types';
 
-interface UseInfiniteScrollDataParams< Item > {
+interface UseDataParams< Item > {
 	view: View;
 	data: Item[];
 	getItemId: ( item: Item ) => string;
 }
 
-interface UseInfiniteScrollDataResult< Item > {
+interface UseDataResult< Item > {
 	data: Item[];
 	setVisibleEntries?: React.Dispatch< React.SetStateAction< number[] > >;
 }
 
 /**
- * Hook to manage infinite scroll data loading and visibility tracking.
+ * Hook to manage data for DataViews.
  *
- * This hook handles:
+ * When infinite scroll is enabled, this hook handles:
  * - Loading more data when scrolling up or down
  * - Maintaining stable positions for items
  * - Unloading items that are no longer visible (with a buffer)
+ *
+ * When infinite scroll is disabled, it simply returns the provided data.
  *
  * @param params           - Configuration parameters
  * @param params.view      - Current view configuration
  * @param params.data      - Current page of data
  * @param params.getItemId - Function to extract item ID
- * @return Object containing filtered data, pagination info, and loading state
+ * @return Object containing filtered data and optional setVisibleEntries callback
  */
-export function useInfiniteScrollData< Item extends { id: number } >( {
+export function useData< Item extends { id: number } >( {
 	view,
 	data: shownData,
 	getItemId,
-}: UseInfiniteScrollDataParams< Item > ): UseInfiniteScrollDataResult< Item > {
+}: UseDataParams< Item > ): UseDataResult< Item > {
+	// If infinite scroll is not enabled, just return the plain data
+	const isInfiniteScrollEnabled = view.infiniteScrollEnabled;
+
 	// Custom pagination handler that simulates server-side pagination
 	const [ allLoadedRecords, setAllLoadedRecords ] = useState< Item[] >( [] );
 
@@ -189,6 +194,14 @@ export function useInfiniteScrollData< Item extends { id: number } >( {
 		visibleEntries,
 		getItemId,
 	] );
+
+	// When infinite scroll is disabled, return the plain data
+	if ( ! isInfiniteScrollEnabled ) {
+		return {
+			data: shownData,
+			setVisibleEntries: undefined,
+		};
+	}
 
 	return {
 		data: allLoadedRecords,

@@ -40,7 +40,7 @@ import DataViewsViewConfig, {
 	ViewTypeMenu,
 } from '../components/dataviews-view-config';
 import normalizeFields from '../field-types';
-import { useInfiniteScrollData } from '../hooks/use-infinite-scroll-data';
+import { useData } from '../hooks/use-data';
 import type { Action, Field, View, SupportedLayouts } from '../types';
 import type { SelectionOrUpdater } from '../types/private';
 type ItemWithId = { id: string };
@@ -155,18 +155,15 @@ function DataViews< Item >( {
 	config = { perPageSizes: [ 10, 20, 50, 100 ] },
 	empty,
 }: DataViewsProps< Item > ) {
-	// Use infinite scroll hook internally when enabled
-	const { data: infiniteScrollData, setVisibleEntries } =
-		useInfiniteScrollData( {
-			view,
-			data: data as any,
-			getItemId: getItemId as any,
-		} );
-
-	// Use infinite scroll data and pagination info when enabled, otherwise use the provided ones
-	const displayData = view.infiniteScrollEnabled
-		? ( infiniteScrollData as Item[] )
-		: data;
+	// useData ensures data loading is correct whether infinite scroll is enabled or pagination is used.
+	const { data: displayData, setVisibleEntries } = useData( {
+		view,
+		data: data as any,
+		getItemId: getItemId as any,
+	} ) as {
+		data: Item[];
+		setVisibleEntries?: React.Dispatch< React.SetStateAction< number[] > >;
+	};
 	const containerRef = useRef< HTMLDivElement | null >( null );
 	const [ containerWidth, setContainerWidth ] = useState( 0 );
 	const isLoadingRef = useRef( false );
