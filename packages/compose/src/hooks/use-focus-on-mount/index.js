@@ -49,7 +49,7 @@ export default function useFocusOnMount( focusOnMount = 'firstElement' ) {
 	};
 
 	/** @type {import('react').MutableRefObject<ReturnType<setTimeout> | undefined>} */
-	const timerIdRef = useRef();
+	const timerIdRef = useRef( undefined );
 
 	useEffect( () => {
 		focusOnMountRef.current = focusOnMount;

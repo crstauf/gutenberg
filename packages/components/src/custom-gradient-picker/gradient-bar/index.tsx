@@ -87,7 +87,7 @@ export default function CustomGradientBar( {
 	disableAlpha = false,
 	__experimentalIsRenderedInSidebar = false,
 }: CustomGradientBarProps ) {
-	const gradientMarkersContainerDomRef = useRef< HTMLDivElement >( null );
+	const gradientMarkersContainerDomRef = useRef< HTMLDivElement | null >( null );
 
 	const [ gradientBarState, gradientBarStateDispatch ] = useReducer(
 		customGradientBarReducer,

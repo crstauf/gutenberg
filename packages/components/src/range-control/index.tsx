@@ -122,7 +122,7 @@ function UnforwardedRangeControl(
 	const [ showTooltip, setShowTooltip ] = useState( hasTooltip );
 	const [ isFocused, setIsFocused ] = useState( false );
 
-	const inputRef = useRef< HTMLInputElement >();
+	const inputRef = useRef< HTMLInputElement >( null );
 	const isCurrentlyFocused = inputRef.current?.matches( ':focus' );
 	const isThumbFocused = ! disabled && isFocused;
 
@@ -345,7 +345,6 @@ function UnforwardedRangeControl(
 							__next40pxDefaultSize ? space( 20 ) : space( 16 )
 						}
 						step={ step }
-						// @ts-expect-error TODO: Investigate if the `null` value is necessary
 						value={ inputSliderValue }
 						__shouldNotWarnDeprecated36pxSize
 					/>

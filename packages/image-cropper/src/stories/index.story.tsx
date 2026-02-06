@@ -238,7 +238,7 @@ export const WithControls = {
  * @param containerRef - The ref to the container element.
  * @return The container style and the handleOnload function.
  */
-function useHandleOnload( containerRef: React.RefObject< HTMLDivElement > ) {
+function useHandleOnload( containerRef: React.RefObject< HTMLDivElement | null > ) {
 	const [ containerStyle, setContainerStyle ] = useState< {
 		minHeight?: string;
 		minWidth?: string;

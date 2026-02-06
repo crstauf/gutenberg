@@ -161,8 +161,8 @@ function ValidatedDateControl< Item >( {
 	field: NormalizedField< Item >;
 	validity?: FieldValidity;
 	inputRefs:
-		| React.RefObject< HTMLInputElement >
-		| React.RefObject< HTMLInputElement >[];
+		| React.RefObject< HTMLInputElement | null >
+		| React.RefObject< HTMLInputElement | null >[];
 	isTouched: boolean;
 	setIsTouched: ( touched: boolean ) => void;
 	children: React.ReactNode;
@@ -314,7 +314,7 @@ function CalendarDateControl< Item >( {
 	} );
 
 	const [ isTouched, setIsTouched ] = useState( false );
-	const validityTargetRef = useRef< HTMLInputElement >( null );
+	const validityTargetRef = useRef< HTMLInputElement | null >( null );
 
 	const onChangeCallback = useCallback(
 		( newValue: string | undefined ) =>
@@ -510,8 +510,8 @@ function CalendarDateRangeControl< Item >( {
 	} );
 
 	const [ isTouched, setIsTouched ] = useState( false );
-	const fromInputRef = useRef< HTMLInputElement >( null );
-	const toInputRef = useRef< HTMLInputElement >( null );
+	const fromInputRef = useRef< HTMLInputElement | null >( null );
+	const toInputRef = useRef< HTMLInputElement | null >( null );
 
 	const updateDateRange = useCallback(
 		( fromDate?: Date | string, toDate?: Date | string ) => {

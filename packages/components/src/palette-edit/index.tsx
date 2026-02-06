@@ -297,7 +297,7 @@ function PaletteEditListView< T extends PaletteElement >( {
 	addColorRef,
 }: PaletteEditListViewProps< T > ) {
 	// When unmounting the component if there are empty elements (the user did not complete the insertion) clean them.
-	const elementsReferenceRef = useRef< typeof elements >();
+	const elementsReferenceRef = useRef< typeof elements | undefined >( undefined );
 	useEffect( () => {
 		elementsReferenceRef.current = elements;
 	}, [ elements ] );

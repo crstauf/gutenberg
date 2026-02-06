@@ -19,7 +19,7 @@ export const ColorCopyButton = ( props: ColorCopyButtonProps ) => {
 	const [ copiedColor, setCopiedColor ] = useState< string | null >( null );
 	const copyTimerRef = useRef<
 		ReturnType< typeof setTimeout > | undefined
-	>();
+	>( undefined );
 	const copyRef = useCopyToClipboard< HTMLDivElement >(
 		() => {
 			switch ( colorType ) {

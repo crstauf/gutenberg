@@ -79,7 +79,7 @@ function UnforwardedSearchControl(
 	// Work with the design team (@WordPress/gutenberg-design) if you need this feature.
 	const { disabled, ...filteredRestProps } = restProps;
 
-	const searchRef = useRef< HTMLInputElement >( null );
+	const searchRef = useRef< HTMLInputElement | null >( null );
 	const instanceId = useInstanceId(
 		SearchControl,
 		'components-search-control'

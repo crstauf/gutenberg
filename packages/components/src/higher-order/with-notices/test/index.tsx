@@ -93,7 +93,7 @@ describe( 'withNotices return type', () => {
 describe( 'withNotices operations', () => {
 	let handle: React.MutableRefObject< any >;
 	const Handle = ( props: any ) => {
-		handle = useRef();
+		handle = useRef( null );
 		return <TestNoticeOperations { ...props } ref={ handle } />;
 	};
 

@@ -23,7 +23,7 @@ function FiltersToggle() {
 		setIsShowingFilter,
 	} = useContext( DataViewsContext );
 
-	const buttonRef = useRef< HTMLButtonElement >( null );
+	const buttonRef = useRef< HTMLButtonElement | null >( null );
 	const onChangeViewWithFilterVisibility = useCallback(
 		( _view: View ) => {
 			onChangeView( _view );
@@ -92,7 +92,7 @@ function FilterVisibilityToggle( {
 	filtersCount,
 	children,
 }: {
-	buttonRef: React.RefObject< HTMLButtonElement >;
+	buttonRef: React.RefObject< HTMLButtonElement | null >;
 	filtersCount?: number;
 	children: React.ReactNode;
 } ) {
