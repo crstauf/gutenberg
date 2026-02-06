@@ -90,13 +90,13 @@ export default function InspectorControlsTabs( {
 						)
 					) }
 				</Tabs.TabList>
-				<Tabs.TabPanel tabId={ TAB_CONTENT.name } focusable={ false }>
-					<InspectorControls.Slot group="content" />
-				</Tabs.TabPanel>
 				<Tabs.TabPanel tabId={ TAB_LIST_VIEW.name } focusable={ false }>
 					<ContentTab contentClientIds={ contentClientIds } />
 					<InspectorControls.Slot group="list" ref={ listViewRef } />
 					<ListViewContentPopover listViewRef={ listViewRef } />
+				</Tabs.TabPanel>
+				<Tabs.TabPanel tabId={ TAB_CONTENT.name } focusable={ false }>
+					<InspectorControls.Slot group="content" />
 				</Tabs.TabPanel>
 				<Tabs.TabPanel tabId={ TAB_SETTINGS.name } focusable={ false }>
 					<SettingsTab showAdvancedControls={ !! blockName } />

@@ -84,15 +84,23 @@ export default function useInspectorControlsTabs(
 		...( hasListFills && hasStyleFills > 1 ? advancedFills : [] ),
 	];
 
-	const hasContentTab = ! isSectionBlock && hasContentFills;
-	if ( hasContentTab ) {
-		tabs.push( TAB_CONTENT );
-	}
+	// When the block fields experiment is active, only rely on `hasContentFills`
+	// to determine whether the content tab to be shown. The tab purely uses slot
+	// fills in this situation.
+	const shouldShowBlockFields =
+		window?.__experimentalContentOnlyInspectorFields;
+	const hasContentTab =
+		hasContentFills ||
+		( ! shouldShowBlockFields && contentClientIds?.length );
 
 	// Add the tabs in the order that they will default to if available.
 	// List View > Content > Settings > Styles.
-	if ( hasListFills || contentClientIds?.length ) {
+	if ( hasListFills ) {
 		tabs.push( TAB_LIST_VIEW );
+	}
+
+	if ( hasContentTab ) {
+		tabs.push( TAB_CONTENT );
 	}
 
 	if (
