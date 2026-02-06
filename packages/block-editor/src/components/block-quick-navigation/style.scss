@@ -1,13 +1,5 @@
 @use "@wordpress/base-styles/variables";
 
 .block-editor-block-quick-navigation__item {
-	height: variables.$grid-unit-40 !important;
 	font-weight: variables.$font-weight-regular;
-
-	&.is-pressed,
-	&.is-pressed:hover {
-		&:not(:disabled, [aria-disabled="true"]) {
-			background: var(--wp-admin-theme-color);
-		}
-	}
 }

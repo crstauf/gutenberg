@@ -20,7 +20,7 @@ const ContentTab = ( { contentClientIds } ) => {
 	return (
 		<>
 			{ ! shouldShowBlockFields && (
-				<PanelBody title={ __( 'Overview' ) }>
+				<PanelBody title={ __( 'Content' ) }>
 					<BlockQuickNavigation clientIds={ contentClientIds } />
 				</PanelBody>
 			) }

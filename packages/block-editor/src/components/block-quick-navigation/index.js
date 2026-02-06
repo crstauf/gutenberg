@@ -24,7 +24,7 @@ export default function BlockQuickNavigation( { clientIds, onSelect } ) {
 		return null;
 	}
 	return (
-		<VStack spacing={ 0 }>
+		<VStack spacing={ 1 }>
 			{ clientIds.map( ( clientId ) => (
 				<BlockQuickNavigationItem
 					onSelect={ onSelect }

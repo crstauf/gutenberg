@@ -93,14 +93,14 @@ export default function useInspectorControlsTabs(
 		hasContentFills ||
 		( ! shouldShowBlockFields && contentClientIds?.length );
 
+	if ( hasContentTab ) {
+		tabs.push( TAB_CONTENT );
+	}
+
 	// Add the tabs in the order that they will default to if available.
 	// List View > Content > Settings > Styles.
 	if ( hasListFills ) {
 		tabs.push( TAB_LIST_VIEW );
-	}
-
-	if ( hasContentTab ) {
-		tabs.push( TAB_CONTENT );
 	}
 
 	if (
