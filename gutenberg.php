@@ -72,3 +72,22 @@ function gutenberg_pre_init() {
 
 	require_once __DIR__ . '/lib/load.php';
 }
+
+
+add_filter( 'get_block_type_variations', 'change_default_separator_block_variations', 10, 2 );
+function change_default_separator_block_variations( $variations, $block ) {
+	$block_name = $block->name;
+	switch ( $block_name ) {
+		case 'core/separator':
+			$variations[] = [
+				'name' => 'separator',
+				'isDefault' => true,
+				'attributes' => [
+					'tagName' => 'div',
+				],
+			];
+			break;
+	}
+
+	return $variations;
+}

@@ -97,7 +97,7 @@ const ExampleComponent = () => {
 		[]
 	);
 
-	const format = getFormatTypeForClassName( 'has-inline-color' );
+	const format = getFormatTypeForClassName( 'has-inline-text-color' );
 
 	return format && <p>{ sprintf( __( 'Format name: %s' ), format.name ) }</p>;
 };

@@ -1,7 +1,6 @@
 /**
  * WordPress dependencies
  */
-import { useMemo } from '@wordpress/element';
 import { useSelect } from '@wordpress/data';
 import {
 	applyFormat,
@@ -21,14 +20,14 @@ import { Popover } from '@wordpress/components';
 /**
  * Internal dependencies
  */
-import { textColor as settings } from './index';
+import { backgroundColor as settings } from './index';
 
 function parseCSS( css = '' ) {
 	return css.split( ';' ).reduce( ( accumulator, rule ) => {
 		if ( rule ) {
 			const [ property, value ] = rule.split( ':' );
-			if ( property === 'color' ) {
-				accumulator.color = value?.trim();
+			if ( property === 'background-color' && value ) {
+				accumulator.backgroundColor = value.trim();
 			}
 		}
 		return accumulator;
@@ -37,21 +36,20 @@ function parseCSS( css = '' ) {
 
 export function parseClassName( className = '', colorSettings ) {
 	return className.split( ' ' ).reduce( ( accumulator, name ) => {
-		// Match has-*-color but not has-*-background-color (text color slug only).
+		// Match has-*-background-color (e.g. has-vivid-red-background-color).
 		if (
 			name.startsWith( 'has-' ) &&
-			name.endsWith( '-color' ) &&
-			! name.endsWith( '-background-color' )
+			name.endsWith( '-background-color' )
 		) {
 			const colorSlug = name
 				.replace( /^has-/, '' )
-				.replace( /-color$/, '' );
+				.replace( /-background-color$/, '' );
 			const colorObject = getColorObjectByAttributeValues(
 				colorSettings,
 				colorSlug
 			);
 			if ( colorObject?.color ) {
-				accumulator.color = colorObject.color;
+				accumulator.backgroundColor = colorObject.color;
 			}
 		}
 		return accumulator;
@@ -59,25 +57,25 @@ export function parseClassName( className = '', colorSettings ) {
 }
 
 export function getActiveColors( value, name, colorSettings ) {
-	const activeColorFormat = getActiveFormat( value, name );
+	const activeFormat = getActiveFormat( value, name );
 
-	if ( ! activeColorFormat ) {
+	if ( ! activeFormat ) {
 		return {};
 	}
 
 	return {
-		...parseCSS( activeColorFormat.attributes.style ),
-		...parseClassName( activeColorFormat.attributes.class, colorSettings ),
+		...parseCSS( activeFormat.attributes.style ),
+		...parseClassName( activeFormat.attributes.class, colorSettings ),
 	};
 }
 
 function setColors( value, name, colorSettings, colors ) {
-	const { color } = {
+	const { backgroundColor } = {
 		...getActiveColors( value, name, colorSettings ),
 		...colors,
 	};
 
-	if ( ! color ) {
+	if ( ! backgroundColor ) {
 		return removeFormat( value, name );
 	}
 
@@ -85,12 +83,17 @@ function setColors( value, name, colorSettings, colors ) {
 	const classNames = [];
 	const attributes = {};
 
-	const colorObject = getColorObjectByColorValue( colorSettings, color );
+	const colorObject = getColorObjectByColorValue(
+		colorSettings,
+		backgroundColor
+	);
 
 	if ( colorObject ) {
-		classNames.push( getColorClassName( 'color', colorObject.slug ) );
+		classNames.push(
+			getColorClassName( 'background-color', colorObject.slug )
+		);
 	} else {
-		styles.push( [ 'color', color ].join( ':' ) );
+		styles.push( [ 'background-color', backgroundColor ].join( ':' ) );
 	}
 
 	if ( styles.length ) {
@@ -108,10 +111,7 @@ function ColorPicker( { name, property, value, onChange } ) {
 		const { getSettings } = select( blockEditorStore );
 		return getSettings().colors ?? [];
 	}, [] );
-	const activeColors = useMemo(
-		() => getActiveColors( value, name, colors ),
-		[ name, value, colors ]
-	);
+	const activeColors = getActiveColors( value, name, colors );
 
 	return (
 		<ColorPalette
@@ -122,7 +122,6 @@ function ColorPicker( { name, property, value, onChange } ) {
 				);
 			} }
 			enableAlpha
-			// Prevent the text and color picker from overlapping.
 			__experimentalIsRenderedInSidebar
 		/>
 	);
@@ -149,7 +148,7 @@ export default function InlineColorUI( {
 		>
 			<ColorPicker
 				name={ name }
-				property="color"
+				property="backgroundColor"
 				value={ value }
 				onChange={ onChange }
 			/>

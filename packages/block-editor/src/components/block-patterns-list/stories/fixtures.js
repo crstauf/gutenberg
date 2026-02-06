@@ -721,7 +721,7 @@ export default [
 								attributes: {
 									align: 'left',
 									content:
-										'<mark style="color:#a65a00" class="has-inline-color">✴︎</mark> Walk',
+										'<span style="color:#a65a00" class="has-inline-text-color">✴︎</span> Walk',
 									dropCap: false,
 									style: {
 										typography: {
@@ -737,7 +737,7 @@ export default [
 								},
 								innerBlocks: [],
 								originalContent:
-									'<p class="has-text-align-left has-black-color has-text-color" style="font-size:148px;font-style:normal;font-weight:700;letter-spacing:-2px;line-height:0.9;text-transform:uppercase"><mark style="color:#a65a00" class="has-inline-color">✴︎</mark> Walk</p>',
+									'<p class="has-text-align-left has-black-color has-text-color" style="font-size:148px;font-style:normal;font-weight:700;letter-spacing:-2px;line-height:0.9;text-transform:uppercase"><span style="color:#a65a00" class="has-inline-text-color">✴︎</span> Walk</p>',
 								validationIssues: [],
 							},
 							{

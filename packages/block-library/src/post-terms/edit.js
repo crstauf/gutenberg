@@ -35,6 +35,7 @@ const ALLOWED_FORMATS = [
 	'core/link',
 	'core/strikethrough',
 	'core/text-color',
+	'core/background-color',
 ];
 
 export default function PostTermsEdit( {

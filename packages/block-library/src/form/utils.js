@@ -13,9 +13,9 @@ export const formSubmissionNotificationSuccess = [
 			'core/paragraph',
 			{
 				content:
-					'<mark style="background-color:rgba(0, 0, 0, 0);color:#345C00" class="has-inline-color">' +
+					'<span style="color:#345C00" class="has-inline-text-color">' +
 					__( 'Your form has been submitted successfully' ) +
-					'</mark>',
+					'</span>',
 			},
 		],
 	],
@@ -30,9 +30,9 @@ export const formSubmissionNotificationError = [
 			'core/paragraph',
 			{
 				content:
-					'<mark style="background-color:rgba(0, 0, 0, 0);color:#CF2E2E" class="has-inline-color">' +
+					'<span style="color:#CF2E2E" class="has-inline-text-color">' +
 					__( 'There was an error submitting your form.' ) +
-					'</mark>',
+					'</span>',
 			},
 		],
 	],

@@ -4,11 +4,7 @@
 import { __ } from '@wordpress/i18n';
 import { useMemo, useState } from '@wordpress/element';
 import { RichTextToolbarButton, useSettings } from '@wordpress/block-editor';
-import {
-	Icon,
-	color as colorIcon,
-	textColor as textColorIcon,
-} from '@wordpress/icons';
+import { Icon, background as backgroundIcon } from '@wordpress/icons';
 import { removeFormat } from '@wordpress/rich-text';
 
 /**
@@ -16,28 +12,12 @@ import { removeFormat } from '@wordpress/rich-text';
  */
 import { default as InlineColorUI, getActiveColors } from './inline';
 
-const name = 'core/text-color';
-const title = __( 'Highlight' );
+const name = 'core/background-color';
+const title = __( 'Background' );
 
 const EMPTY_ARRAY = [];
 
-function getComputedStyleProperty( element, property ) {
-	const { ownerDocument } = element;
-	const { defaultView } = ownerDocument;
-	const style = defaultView.getComputedStyle( element );
-	return style.getPropertyValue( property );
-}
-
-function fillComputedColors( element, { color } ) {
-	if ( ! color ) {
-		return;
-	}
-	return {
-		color: color || getComputedStyleProperty( element, 'color' ),
-	};
-}
-
-function TextColorEdit( {
+function BackgroundColorEdit( {
 	value,
 	onChange,
 	isActive,
@@ -49,14 +29,13 @@ function TextColorEdit( {
 		'color.palette'
 	);
 	const [ isAddingColor, setIsAddingColor ] = useState( false );
-	const colorIndicatorStyle = useMemo(
-		() =>
-			fillComputedColors(
-				contentRef.current,
-				getActiveColors( value, name, colors )
-			),
-		[ contentRef, value, colors ]
-	);
+	const colorIndicatorStyle = useMemo( () => {
+		const { backgroundColor } = getActiveColors( value, name, colors );
+		if ( ! backgroundColor ) {
+			return undefined;
+		}
+		return { backgroundColor };
+	}, [ value, colors ] );
 
 	const hasColorsToChoose = !! colors.length || allowCustomControl;
 	if ( ! hasColorsToChoose && ! isActive ) {
@@ -66,20 +45,15 @@ function TextColorEdit( {
 	return (
 		<>
 			<RichTextToolbarButton
-				className="format-library-text-color-button"
+				className="format-library-background-color-button"
 				isActive={ isActive }
 				icon={
 					<Icon
-						icon={
-							Object.keys( activeAttributes ).length
-								? textColorIcon
-								: colorIcon
-						}
+						icon={ backgroundIcon }
 						style={ colorIndicatorStyle }
 					/>
 				}
 				title={ title }
-				// If has no colors to choose but a color is active remove the color onClick.
 				onClick={
 					hasColorsToChoose
 						? () => setIsAddingColor( true )
@@ -102,14 +76,14 @@ function TextColorEdit( {
 	);
 }
 
-export const textColor = {
+export const backgroundColor = {
 	name,
 	title,
 	tagName: 'span',
-	className: 'has-inline-text-color',
+	className: 'has-inline-background-color',
 	attributes: {
 		style: 'style',
 		class: 'class',
 	},
-	edit: TextColorEdit,
+	edit: BackgroundColorEdit,
 };
