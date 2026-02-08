@@ -2324,6 +2324,10 @@ function getDerivedBlockEditingModesForTree( state, treeClientId = '' ) {
 				derivedBlockEditingModes.set( clientId, 'default' );
 				return;
 			}
+
+			// Disable blocks that are outside of the edited section.
+			derivedBlockEditingModes.set( clientId, 'disabled' );
+			return;
 		}
 
 		// If the block already has an explicit block editing mode set,
