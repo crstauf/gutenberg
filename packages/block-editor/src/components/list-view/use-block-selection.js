@@ -52,12 +52,8 @@ export default function useBlockSelection() {
 					event.keyCode === HOME ||
 					event.keyCode === END );
 
-			// When in content-only pattern editing mode and Escape is pressed,
-			// exit the editing mode instead of just clearing selection.
-			if (
-				window?.__experimentalContentOnlyPatternInsertion &&
-				isOnlyDeselection
-			) {
+			// When Escape is pressed, exit the editing mode instead of just clearing selection.
+			if ( isOnlyDeselection ) {
 				const editedContentOnlySection = getEditedContentOnlySection();
 				if ( editedContentOnlySection ) {
 					stopEditingContentOnlySection();

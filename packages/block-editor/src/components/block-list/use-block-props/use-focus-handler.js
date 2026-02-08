@@ -77,11 +77,7 @@ export function useFocusHandler( clientId ) {
 
 				// If we're in spotlight mode and clicking outside the edited section,
 				// exit spotlight mode instead of selecting the block.
-				if (
-					window?.__experimentalContentOnlyPatternInsertion &&
-					editedSection &&
-					! isWithinEditedSection
-				) {
+				if ( editedSection && ! isWithinEditedSection ) {
 					stopEditingContentOnlySection();
 					return;
 				}

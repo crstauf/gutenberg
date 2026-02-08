@@ -8,11 +8,7 @@ test.describe( 'List View Spotlight Mode', () => {
 		await requestUtils.deleteAllBlocks();
 	} );
 
-	test.beforeEach( async ( { admin, page } ) => {
-		// Enable the content-only pattern experiment
-		await page.addInitScript( () => {
-			window.__experimentalContentOnlyPatternInsertion = true;
-		} );
+	test.beforeEach( async ( { admin } ) => {
 		await admin.createNewPost();
 	} );
 

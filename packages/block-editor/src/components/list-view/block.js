@@ -136,9 +136,8 @@ function ListViewBlock( {
 		selectedDeviceType,
 		isSpotlightActive,
 		editedSection,
-		isWithinEditedSection
-	} =
-	useSelect(
+		isWithinEditedSection,
+	} = useSelect(
 		( select ) => {
 			const {
 				getBlock,
@@ -146,10 +145,8 @@ function ListViewBlock( {
 				getSettings,
 				hasBlockSpotlight,
 				getEditedContentOnlySection,
-				isWithinEditedContentOnlySection
-			} = unlock(
-				select( blockEditorStore )
-			);
+				isWithinEditedContentOnlySection,
+			} = unlock( select( blockEditorStore ) );
 			const editedContentOnlySection = getEditedContentOnlySection();
 
 			return {
@@ -175,6 +172,33 @@ function ListViewBlock( {
 		: isSpotlightActive && ! ( isSelected || isBranchSelected );
 	const shouldDisableInteractions =
 		!! editedSection && ! isWithinEditedSection;
+
+	const { canRename } = useBlockRename( blockName );
+	// Use hook to get current viewport and if block is currently hidden (accurate viewport detection)
+	const { isBlockCurrentlyHidden, currentViewport } = useBlockVisibility( {
+		blockVisibility: block?.attributes?.metadata?.blockVisibility,
+		deviceType: selectedDeviceType,
+	} );
+
+	// Determine label based on whether block or parent is hidden
+	const blockVisibilityDescription = useMemo( () => {
+		if ( isBlockCurrentlyHidden ) {
+			if ( block?.attributes?.metadata?.blockVisibility === false ) {
+				return __( 'Block is hidden' );
+			}
+			return sprintf(
+				/* translators: %s: viewport name (Desktop, Tablet, Mobile) */
+				__( 'Block is hidden on %s' ),
+				BLOCK_VISIBILITY_VIEWPORTS[ currentViewport ]?.label ||
+					currentViewport
+			);
+		}
+		return null;
+	}, [
+		isBlockCurrentlyHidden,
+		block?.attributes?.metadata?.blockVisibility,
+		currentViewport,
+	] );
 
 	const showBlockActions =
 		// When a block hides its toolbar it also hides the block settings menu,

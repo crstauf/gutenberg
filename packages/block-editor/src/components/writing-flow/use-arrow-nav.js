@@ -202,10 +202,7 @@ export default function useArrowNav() {
 		 *                   - Target block cannot be determined (fallback to allow)
 		 */
 		function canNavigateWithinPatternBoundary( closestTabbable ) {
-			if (
-				! window?.__experimentalContentOnlyPatternInsertion ||
-				! closestTabbable
-			) {
+			if ( ! closestTabbable ) {
 				return true;
 			}
 
@@ -249,10 +246,7 @@ export default function useArrowNav() {
 			const { defaultView } = ownerDocument;
 
 			// Handle Escape key to exit content-only pattern editing mode.
-			if (
-				window?.__experimentalContentOnlyPatternInsertion &&
-				keyCode === ESCAPE
-			) {
+			if ( keyCode === ESCAPE ) {
 				const editedContentOnlySection = getEditedContentOnlySection();
 				if ( editedContentOnlySection ) {
 					event.preventDefault();

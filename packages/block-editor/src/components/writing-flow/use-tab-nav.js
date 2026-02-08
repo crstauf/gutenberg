@@ -144,12 +144,8 @@ export default function useTabNav() {
 			const direction = isShift ? 'findPrevious' : 'findNext';
 			const nextTabbable = focus.tabbable[ direction ]( target );
 
-			// When in content-only pattern editing mode, prevent tabbing outside
-			// the pattern boundary.
-			if (
-				window?.__experimentalContentOnlyPatternInsertion &&
-				nextTabbable
-			) {
+			// Prevent tabbing outside the pattern boundary.
+			if ( nextTabbable ) {
 				const editedContentOnlySection = getEditedContentOnlySection();
 				if ( editedContentOnlySection ) {
 					const nextBlockClientId = getBlockClientId( nextTabbable );
