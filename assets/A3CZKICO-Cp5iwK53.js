@@ -1,0 +1,1 @@
+import{c as a,_ as r,d as o,f as t,a as n}from"./LMDWO4NN-BHBVAX8u.js";var e=a((function useSeparator2(a){var t=a,{orientation:n="horizontal"}=t,e=r(t,["orientation"]);return e=o({role:"separator","aria-orientation":n},e)})),i=t((function Separator2(a){const r=e(a);return n("hr",r)}));export{i as S,e as u};
