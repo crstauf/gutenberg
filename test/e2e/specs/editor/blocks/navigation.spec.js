@@ -739,7 +739,7 @@ test.describe( 'Navigation block', () => {
 
 				// With LinkControlInspector, check that link button shows the page info
 				const linkButton = page
-					.getByRole( 'tabpanel', { name: 'Settings' } )
+					.getByRole( 'tabpanel', { name: 'Content' } )
 					.getByRole( 'button', { name: /Cat/i } );
 
 				// Wait for the Cat link to load in the button
@@ -752,7 +752,7 @@ test.describe( 'Navigation block', () => {
 				// Cat link is already selected from setup step, with entity loaded
 				// Verify sidebar shows Cat
 				inspectorNavigationLabel = page
-					.getByRole( 'tabpanel', { name: 'Settings' } )
+					.getByRole( 'tabpanel', { name: 'Content' } )
 					.getByRole( 'textbox', {
 						name: 'Text',
 					} );
@@ -1197,7 +1197,7 @@ test.describe( 'Navigation block', () => {
 				await editor.openDocumentSettingsSidebar();
 				const settingsControls = page
 					.getByRole( 'region', { name: 'Editor settings' } )
-					.getByRole( 'tabpanel', { name: 'Settings' } );
+					.getByRole( 'tabpanel', { name: 'Content' } );
 
 				await expect( settingsControls ).toBeVisible();
 
@@ -1287,16 +1287,13 @@ test.describe( 'Navigation block', () => {
 
 				// Check that the link button now shows the updated URL
 				await editor.openDocumentSettingsSidebar();
-				const settingsControls = page
+				const contentControls = page
 					.getByRole( 'region', { name: 'Editor settings' } )
-					.getByRole( 'tabpanel', { name: 'Settings' } );
+					.getByRole( 'tabpanel', { name: 'Content' } );
 
-				const updatedLinkButton = settingsControls.getByRole(
-					'button',
-					{
-						name: /Link to:/,
-					}
-				);
+				const updatedLinkButton = contentControls.getByRole( 'button', {
+					name: /Link to:/,
+				} );
 
 				const updatedUrl = new URL( updatedPage.link );
 				await expect( updatedLinkButton ).toContainText(
@@ -1410,14 +1407,14 @@ test.describe( 'Navigation block', () => {
 			// Check the Inspector controls for the Nav Link block
 			// to verify the Link field is clickable (not locked in entity mode)
 			await editor.openDocumentSettingsSidebar();
-			const settingsControls = page
+			const contentControls = page
 				.getByRole( 'region', { name: 'Editor settings' } )
-				.getByRole( 'tabpanel', { name: 'Settings' } );
+				.getByRole( 'tabpanel', { name: 'Content' } );
 
-			await expect( settingsControls ).toBeVisible();
+			await expect( contentControls ).toBeVisible();
 
 			// With LinkControlInspector, there's now a button instead of a textbox
-			const linkButton = settingsControls.getByRole( 'button', {
+			const linkButton = contentControls.getByRole( 'button', {
 				name: /test-page-1/i,
 			} );
 
@@ -1505,14 +1502,14 @@ test.describe( 'Navigation block', () => {
 
 			// Open sidebar to check Link field
 			await editor.openDocumentSettingsSidebar();
-			const settingsControls = page
+			const contentControls = page
 				.getByRole( 'region', { name: 'Editor settings' } )
-				.getByRole( 'tabpanel', { name: 'Settings' } );
+				.getByRole( 'tabpanel', { name: 'Content' } );
 
-			await expect( settingsControls ).toBeVisible();
+			await expect( contentControls ).toBeVisible();
 
 			// With LinkControlInspector, synced links show a button with the URL
-			const linkButton = settingsControls.getByRole( 'button', {
+			const linkButton = contentControls.getByRole( 'button', {
 				name: /Link to:/,
 			} );
 
@@ -1634,14 +1631,14 @@ test.describe( 'Navigation block', () => {
 
 				// Open document settings sidebar
 				await editor.openDocumentSettingsSidebar();
-				const settingsControls = page
+				const contentControls = page
 					.getByRole( 'region', { name: 'Editor settings' } )
-					.getByRole( 'tabpanel', { name: 'Settings' } );
+					.getByRole( 'tabpanel', { name: 'Content' } );
 
-				await expect( settingsControls ).toBeVisible();
+				await expect( contentControls ).toBeVisible();
 
 				// With LinkControlInspector, unavailable entities show a button with error badge
-				const linkButton = settingsControls.getByRole( 'button', {
+				const linkButton = contentControls.getByRole( 'button', {
 					name: /Missing page/i,
 				} );
 
@@ -1653,11 +1650,11 @@ test.describe( 'Navigation block', () => {
 			} );
 
 			await test.step( 'Verify clicking button with error opens link control for fixing', async () => {
-				const settingsControls = page
+				const contentControls = page
 					.getByRole( 'region', { name: 'Editor settings' } )
-					.getByRole( 'tabpanel', { name: 'Settings' } );
+					.getByRole( 'tabpanel', { name: 'Content' } );
 
-				const linkButton = settingsControls.getByRole( 'button', {
+				const linkButton = contentControls.getByRole( 'button', {
 					name: /Missing page/i,
 				} );
 
@@ -1684,12 +1681,9 @@ test.describe( 'Navigation block', () => {
 				await expect( linkPopover ).toBeHidden();
 
 				// Verify button now shows the new URL
-				const updatedLinkButton = settingsControls.getByRole(
-					'button',
-					{
-						name: /Link to:/,
-					}
-				);
+				const updatedLinkButton = contentControls.getByRole( 'button', {
+					name: /Link to:/,
+				} );
 				await expect( updatedLinkButton ).toContainText(
 					'example.com'
 				);
@@ -1754,7 +1748,7 @@ test.describe( 'Navigation block', () => {
 			await test.step( 'Open inspector and verify LinkPicker shows current page', async () => {
 				await editor.openDocumentSettingsSidebar();
 
-				const settingsControls = navigation.getSettingsControls();
+				const settingsControls = navigation.getContentControls();
 				await expect( settingsControls ).toBeVisible();
 
 				// Verify the LinkPicker button shows the current page
@@ -1767,7 +1761,7 @@ test.describe( 'Navigation block', () => {
 			} );
 
 			await test.step( 'Click LinkPicker button to open dropdown', async () => {
-				const settingsControls = navigation.getSettingsControls();
+				const settingsControls = navigation.getContentControls();
 
 				const linkButton = settingsControls.getByRole( 'button', {
 					name: /Link to:/,
@@ -1799,7 +1793,7 @@ test.describe( 'Navigation block', () => {
 			} );
 
 			await test.step( 'Verify LinkPicker now shows Test Page 2', async () => {
-				const settingsControls = navigation.getSettingsControls();
+				const settingsControls = navigation.getContentControls();
 
 				const linkButton = settingsControls.getByRole( 'button', {
 					name: /Link to:/,
@@ -1839,7 +1833,7 @@ test.describe( 'Navigation block', () => {
 
 			await test.step( 'Open inspector LinkPicker and change to custom URL', async () => {
 				await editor.openDocumentSettingsSidebar();
-				const settingsControls = navigation.getSettingsControls();
+				const settingsControls = navigation.getContentControls();
 
 				const linkButton = settingsControls.getByRole( 'button', {
 					name: /Link to:/,
@@ -1859,7 +1853,7 @@ test.describe( 'Navigation block', () => {
 			} );
 
 			await test.step( 'Verify LinkPicker shows custom URL', async () => {
-				const settingsControls = navigation.getSettingsControls();
+				const settingsControls = navigation.getContentControls();
 
 				const linkButton = settingsControls.getByRole( 'button', {
 					name: /Link to:/,
@@ -1898,7 +1892,7 @@ test.describe( 'Navigation block', () => {
 
 			await test.step( 'Open inspector LinkPicker and change to new custom URL', async () => {
 				await editor.openDocumentSettingsSidebar();
-				const settingsControls = navigation.getSettingsControls();
+				const settingsControls = navigation.getContentControls();
 
 				const linkButton = settingsControls.getByRole( 'button', {
 					name: /Link to:/,
@@ -1919,7 +1913,7 @@ test.describe( 'Navigation block', () => {
 			} );
 
 			await test.step( 'Verify LinkPicker shows new custom URL', async () => {
-				const settingsControls = navigation.getSettingsControls();
+				const settingsControls = navigation.getContentControls();
 
 				const linkButton = settingsControls.getByRole( 'button', {
 					name: /Link to:/,
@@ -1948,7 +1942,7 @@ test.describe( 'Navigation block', () => {
 			await test.step( 'Open inspector and verify LinkPicker shows "Add link" button', async () => {
 				await editor.openDocumentSettingsSidebar();
 
-				const settingsControls = navigation.getSettingsControls();
+				const settingsControls = navigation.getContentControls();
 				await expect( settingsControls ).toBeVisible();
 
 				// Verify button shows "Add link" text
@@ -1960,7 +1954,7 @@ test.describe( 'Navigation block', () => {
 			} );
 
 			await test.step( 'Click LinkPicker button to open dropdown and add page link', async () => {
-				const settingsControls = navigation.getSettingsControls();
+				const settingsControls = navigation.getContentControls();
 
 				const linkButton = settingsControls.getByRole( 'button', {
 					name: /Link to:/,
@@ -1987,7 +1981,7 @@ test.describe( 'Navigation block', () => {
 			} );
 
 			await test.step( 'Verify LinkPicker now shows the selected page', async () => {
-				const settingsControls = navigation.getSettingsControls();
+				const settingsControls = navigation.getContentControls();
 
 				const linkButton = settingsControls.getByRole( 'button', {
 					name: /Link to:/,
@@ -2049,10 +2043,10 @@ class Navigation {
 		} );
 	}
 
-	getSettingsControls() {
+	getContentControls() {
 		return this.page
 			.getByRole( 'region', { name: 'Editor settings' } )
-			.getByRole( 'tabpanel', { name: 'Settings' } );
+			.getByRole( 'tabpanel', { name: 'Content' } );
 	}
 
 	async useBlockInserter() {
