@@ -7,7 +7,7 @@ import { colord } from 'colord';
 /**
  * WordPress dependencies
  */
-import { useInstanceId } from '@wordpress/compose';
+import { useInstanceId, useEvent } from '@wordpress/compose';
 import { useEffect, useRef, useState, useMemo } from '@wordpress/element';
 import { __, sprintf } from '@wordpress/i18n';
 import { plus } from '@wordpress/icons';
@@ -129,7 +129,8 @@ function ControlPoints( {
 	onStopControlPointChange,
 	__experimentalIsRenderedInSidebar,
 }: ControlPointsProps ) {
-	const controlPointMoveStateRef = useRef< ControlPointMoveState | undefined >( undefined );
+	const controlPointMoveStateRef =
+		useRef< ControlPointMoveState >( undefined );
 
 	const onMouseMove = ( event: MouseEvent ) => {
 		if (
@@ -160,7 +161,7 @@ function ControlPoints( {
 		);
 	};
 
-	const cleanEventListeners = () => {
+	const cleanEventListeners = useEvent( () => {
 		if (
 			window &&
 			window.removeEventListener &&
@@ -172,19 +173,13 @@ function ControlPoints( {
 			onStopControlPointChange();
 			controlPointMoveStateRef.current.listenersActivated = false;
 		}
-	};
-
-	// Adding `cleanEventListeners` to the dependency array below requires the function itself to be wrapped in a `useCallback`
-	// This memoization would prevent the event listeners from being properly cleaned.
-	// Instead, we'll pass a ref to the function in our `useEffect` so `cleanEventListeners` itself is no longer a dependency.
-	const cleanEventListenersRef = useRef< ( () => void ) | undefined >( undefined );
-	cleanEventListenersRef.current = cleanEventListeners;
+	} );
 
 	useEffect( () => {
 		return () => {
-			cleanEventListenersRef.current?.();
+			cleanEventListeners();
 		};
-	}, [] );
+	}, [ cleanEventListeners ] );
 
 	return (
 		<>

@@ -236,7 +236,7 @@ function UnforwardedNumberControl(
 			required={ required }
 			step={ step }
 			type={ typeProp }
-			value={ valueProp }
+			value={ valueProp as string }
 			__unstableStateReducer={ numberControlStateReducer }
 			size={ size }
 			__shouldNotWarnDeprecated36pxSize

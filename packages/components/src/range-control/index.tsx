@@ -345,7 +345,7 @@ function UnforwardedRangeControl(
 							__next40pxDefaultSize ? space( 20 ) : space( 16 )
 						}
 						step={ step }
-						value={ inputSliderValue }
+						value={ inputSliderValue ?? undefined }
 						__shouldNotWarnDeprecated36pxSize
 					/>
 				) }
