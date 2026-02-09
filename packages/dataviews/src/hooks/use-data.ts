@@ -90,11 +90,32 @@ export function useData< Item extends { id: number } >( {
 			// Subsequent pages - load more data
 			setAllLoadedRecords( ( prev ) => {
 				const shownDataIds = new Set( shownData.map( getItemId ) );
-				// Calculate start position based on the highest position already tracked
-				let nextPosition =
-					positionMapRef.current.size > 0
-						? Math.max( ...positionMapRef.current.values() ) + 1
-						: 1;
+				const scrollDirection = scrollDirectionRef.current;
+
+				// Count how many new items need positions assigned
+				const newItemsCount = shownData.filter( ( record ) => {
+					const itemId = getItemId( record );
+					return ! positionMapRef.current.has( itemId );
+				} ).length;
+
+				// Calculate start position based on scroll direction
+				// When scrolling up, new items should have positions before the minimum
+				// We start at (min - count) so that after incrementing through all items,
+				// the last new item ends up just before the previous minimum.
+				// When scrolling down, new items should have positions after the maximum
+				let nextPosition: number;
+				if ( positionMapRef.current.size > 0 ) {
+					if ( scrollDirection === 'up' ) {
+						nextPosition =
+							Math.min( ...positionMapRef.current.values() ) -
+							newItemsCount;
+					} else {
+						nextPosition =
+							Math.max( ...positionMapRef.current.values() ) + 1;
+					}
+				} else {
+					nextPosition = 1;
+				}
 
 				const newRecords = shownData.map( ( record ) => {
 					const itemId = getItemId( record );
@@ -107,7 +128,8 @@ export function useData< Item extends { id: number } >( {
 						if ( existingPosition !== undefined ) {
 							position = existingPosition;
 						} else {
-							// Assign new position and increment for next record
+							// Assign new position and always increment
+							// (start position already accounts for scroll direction)
 							position = nextPosition;
 							positionMapRef.current.set( itemId, position );
 							nextPosition++;
@@ -133,7 +155,6 @@ export function useData< Item extends { id: number } >( {
 				}
 
 				// Update the loaded range
-				const scrollDirection = scrollDirectionRef.current;
 				const allRecords =
 					scrollDirection === 'up'
 						? [ ...newRecords, ...prevWithoutDuplicates ]
