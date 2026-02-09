@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Breaking Changes
+
+-    Upgrade React to v19 ([#61521](https://github.com/WordPress/gutenberg/pull/61521)).
+
 ### Bug Fixes
 
 -   `TimePicker`: Fix date parsing for years below 1000 by implementing ISO 8601 compliant year formatting with zero-padding ([#75343](https://github.com/WordPress/gutenberg/pull/75343)).

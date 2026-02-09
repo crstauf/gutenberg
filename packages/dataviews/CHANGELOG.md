@@ -5,6 +5,7 @@
 ### Breaking Changes
 
 - The design tokens stylesheet (`@wordpress/theme/design-tokens.css`) is no longer embedded in the DataViews stylesheet. Applications using DataViews outside of WordPress must now explicitly include the design tokens stylesheet. See the README for installation instructions. [#75182](https://github.com/WordPress/gutenberg/pull/75182)
+- Upgrade React to v19 ([#61521](https://github.com/WordPress/gutenberg/pull/61521)).
 
 ### Bug Fixes
 
