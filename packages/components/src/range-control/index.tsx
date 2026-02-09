@@ -345,7 +345,8 @@ function UnforwardedRangeControl(
 							__next40pxDefaultSize ? space( 20 ) : space( 16 )
 						}
 						step={ step }
-						value={ inputSliderValue ?? undefined }
+						// @ts-expect-error TODO: Investigate if the `null` value is necessary
+						value={ inputSliderValue }
 						__shouldNotWarnDeprecated36pxSize
 					/>
 				) }
