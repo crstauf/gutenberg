@@ -13,13 +13,13 @@ import { __ } from '@wordpress/i18n';
 import {
 	BlockControls,
 	InnerBlocks,
+	InspectorControls,
 	useInnerBlocksProps,
 	RichText,
 	useBlockProps,
 	useBlockEditingMode,
 	store as blockEditorStore,
 	getColorClassName,
-	privateApis as blockEditorPrivateApis,
 } from '@wordpress/block-editor';
 import { isURL, prependHTTP } from '@wordpress/url';
 import { useState, useEffect, useRef } from '@wordpress/element';
@@ -32,7 +32,6 @@ import { useMergeRefs, usePrevious } from '@wordpress/compose';
  * Internal dependencies
  */
 import { ItemSubmenuIcon } from './icons';
-import { unlock } from '../lock-unlock';
 import {
 	Controls,
 	LinkUI,
@@ -50,8 +49,6 @@ import {
 } from '../navigation/edit/utils';
 import { DEFAULT_BLOCK } from '../navigation/constants';
 import { getSubmenuVisibility } from '../navigation/utils/get-submenu-visibility';
-
-const { ListViewContentPopoverFill } = unlock( blockEditorPrivateApis );
 
 const ALLOWED_BLOCKS = [
 	'core/navigation-link',
@@ -336,13 +333,13 @@ export default function NavigationSubmenuEdit( {
 					/>
 				</ToolbarGroup>
 			</BlockControls>
-			<ListViewContentPopoverFill>
+			<InspectorControls group="content">
 				<Controls
 					attributes={ attributes }
 					setAttributes={ setAttributes }
 					clientId={ clientId }
 				/>
-			</ListViewContentPopoverFill>
+			</InspectorControls>
 			<div { ...blockProps }>
 				<ParentElement className="wp-block-navigation-item__content">
 					{ ! isInvalid && ! isDraft && (

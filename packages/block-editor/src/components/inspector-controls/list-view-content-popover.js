@@ -6,19 +6,13 @@ import {
 	Popover,
 	__experimentalUseSlotFills as useSlotFills,
 } from '@wordpress/components';
-import { useContext, useState, useLayoutEffect } from '@wordpress/element';
+import { useState, useLayoutEffect } from '@wordpress/element';
 import { useViewportMatch } from '@wordpress/compose';
 import { useSelect, useDispatch } from '@wordpress/data';
 
 /**
  * Internal dependencies
  */
-import InspectorControlsFill from './fill';
-import { PrivateBlockContext } from '../block-list/private-block-context';
-import {
-	useBlockEditContext,
-	mayDisplayControlsKey,
-} from '../block-edit/context';
 import { store as blockEditorStore } from '../../store';
 import { unlock } from '../../lock-unlock';
 
@@ -27,6 +21,8 @@ import { unlock } from '../../lock-unlock';
 // Create private slot-fill for ListViewContentPanel
 const LIST_VIEW_CONTENT_PANEL_SLOT = Symbol( 'ListViewContentPopover' );
 const { Fill, Slot } = createSlotFill( LIST_VIEW_CONTENT_PANEL_SLOT );
+
+export { Fill as ListViewContentFill };
 
 // Hook to determine popover placement for inspector controls
 function useInspectorPopoverPlacement() {
@@ -44,8 +40,10 @@ function useInspectorPopoverPlacement() {
 
 /**
  * Displays a popover for the List View block inspector support.
- * Blocks can use this via the `ListViewContentPopoverFill` to display their
- * controls in a Popover when a ListView item is clicked.
+ * Blocks can use `<InspectorControls group="content">` to display their
+ * controls in this popover when inside a section with a parent that has
+ * List View block support. The routing is handled automatically by
+ * `InspectorControlsFill`.
  *
  * @param {Object}                 props
  * @param {RefObject<HTMLElement>} props.listViewRef Ref to the List View slot for the block inspector.
@@ -112,36 +110,4 @@ export function ListViewContentPopover( { listViewRef } ) {
 			</div>
 		</Popover>
 	);
-}
-
-/**
- * A fill for blocks to show their content controls.
- *
- * If the block is a child of a block that supports ListView and is being
- * displayed within a `Section`, then the controls will display in a popover
- * whenever a ListView item is selected.
- *
- * When outside of a section fallback to a standard  `InspectorControls`.
- *
- * @param {Object} props
- */
-export function ListViewContentPopoverFill( props ) {
-	const blockEditContext = useBlockEditContext();
-	const privateBlockContext = useContext( PrivateBlockContext );
-
-	// Only render for selected blocks (same as InspectorControlsFill).
-	if ( ! blockEditContext[ mayDisplayControlsKey ] ) {
-		return null;
-	}
-
-	const isSelectionWithinCurrentSection =
-		privateBlockContext?.isSelectionWithinCurrentSection;
-
-	// When inside a section (navigation list view), render to the popover panel slot
-	if ( isSelectionWithinCurrentSection ) {
-		return <Fill { ...props } />;
-	}
-
-	// When outside a section, render to standard inspector controls.
-	return <InspectorControlsFill { ...props } />;
 }

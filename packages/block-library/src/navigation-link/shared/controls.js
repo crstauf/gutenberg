@@ -15,10 +15,6 @@ import { __unstableStripHTML as stripHTML } from '@wordpress/dom';
 import {
 	privateApis as blockEditorPrivateApis,
 	store as blockEditorStore,
-<<<<<<< HEAD
-	useBlockEditingMode,
-=======
->>>>>>> b9d88423124 (Fix block editing mode)
 } from '@wordpress/block-editor';
 import { useSelect } from '@wordpress/data';
 import { store as coreStore } from '@wordpress/core-data';

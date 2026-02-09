@@ -17,12 +17,12 @@ import { displayShortcut, isKeyboardEvent } from '@wordpress/keycodes';
 import { __, sprintf } from '@wordpress/i18n';
 import {
 	BlockControls,
+	InspectorControls,
 	RichText,
 	useBlockProps,
 	store as blockEditorStore,
 	getColorClassName,
 	useInnerBlocksProps,
-	privateApis as blockEditorPrivateApis,
 } from '@wordpress/block-editor';
 import { isURL, prependHTTP } from '@wordpress/url';
 import { useState, useEffect, useRef, useCallback } from '@wordpress/element';
@@ -33,7 +33,6 @@ import { useMergeRefs, useInstanceId } from '@wordpress/compose';
  * Internal dependencies
  */
 import { getColors } from '../navigation/edit/utils';
-import { unlock } from '../lock-unlock';
 import {
 	Controls,
 	LinkUI,
@@ -46,8 +45,6 @@ import {
 	useIsDraggingWithin,
 	selectLabelText,
 } from './shared';
-
-const { ListViewContentPopoverFill } = unlock( blockEditorPrivateApis );
 
 const DEFAULT_BLOCK = { name: 'core/navigation-link' };
 const NESTING_BLOCK_NAMES = [
@@ -394,13 +391,13 @@ export default function NavigationLinkEdit( {
 					) }
 				</ToolbarGroup>
 			</BlockControls>
-			<ListViewContentPopoverFill>
+			<InspectorControls group="content">
 				<Controls
 					attributes={ attributes }
 					setAttributes={ setAttributes }
 					clientId={ clientId }
 				/>
-			</ListViewContentPopoverFill>
+			</InspectorControls>
 			<div { ...blockProps }>
 				{ hasMissingEntity && (
 					<VisuallyHidden id={ missingEntityDescriptionId }>
