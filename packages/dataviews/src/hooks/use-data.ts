@@ -51,6 +51,17 @@ export function useData< Item extends { id: number } >( {
 	// Track the mapping of item IDs to their positions in the full dataset
 	const positionMapRef = useRef< Map< string, number > >( new Map() );
 
+	// Track previous view parameters to detect when we need to reset
+	const prevViewParamsRef = useRef< {
+		search: string | undefined;
+		filters: string | undefined;
+		perPage: number | undefined;
+	} >( {
+		search: undefined,
+		filters: undefined,
+		perPage: undefined,
+	} );
+
 	// Determine scroll direction based on position changes
 	const scrollDirectionRef = useRef< 'up' | 'down' | undefined >( undefined );
 	const prevStartPositionRef = useRef< number | undefined >( undefined );
@@ -69,8 +80,30 @@ export function useData< Item extends { id: number } >( {
 
 	// Initialize data on first load or when view changes significantly
 	useEffect( () => {
-		if ( ! allLoadedRecords.length || ! view.infiniteScrollEnabled ) {
-			// First page - replace all data and initialize range
+		// Serialize filters for comparison
+		const currentFiltersKey = JSON.stringify( view.filters ?? [] );
+		const prevFiltersKey = prevViewParamsRef.current.filters;
+
+		// Check if view parameters that require a reset have changed
+		const shouldReset =
+			! allLoadedRecords.length ||
+			! view.infiniteScrollEnabled ||
+			view.search !== prevViewParamsRef.current.search ||
+			currentFiltersKey !== prevFiltersKey ||
+			view.perPage !== prevViewParamsRef.current.perPage;
+
+		// Update tracked view parameters
+		prevViewParamsRef.current = {
+			search: view.search,
+			filters: currentFiltersKey,
+			perPage: view.perPage,
+		};
+
+		if ( shouldReset ) {
+			// Reset - clear position map and replace all data
+			positionMapRef.current.clear();
+			// Reset scroll direction to prevent stale directional filtering
+			scrollDirectionRef.current = undefined;
 			// Use the view's startPosition if defined, otherwise default to 1
 			const startPosition = view.startPosition ?? 1;
 			const records = shownData.map( ( record, index ) => {
