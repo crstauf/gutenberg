@@ -44,14 +44,6 @@ export default function InspectorControlsFill( {
 
 	const context = useBlockEditContext();
 
-	// Check if this block is inside a section with a parent that has List View
-	// block support. When true, content fills are handled by the List View
-	// popover rather than the normal content inspector slot.
-	const hasListViewParent =
-		group === 'content' &&
-		!! context[ mayDisplayPatternEditingControlsKey ] &&
-		!! context[ isInListViewBlockSupportTreeKey ];
-
 	const Fill = groups[ group ]?.Fill;
 	if ( ! Fill ) {
 		warning( `Unknown InspectorControls group "${ group }" provided.` );
@@ -85,11 +77,13 @@ export default function InspectorControlsFill( {
 		return null;
 	}
 
-	// When inside a section with a List View parent, content controls are
-	// managed by the List View popover. The selected block's controls
-	// render in the popover; all other blocks render nothing to avoid
-	// duplicating controls in the sidebar.
-	if ( hasListViewParent ) {
+	// When inside a section with a parent that has ListView block support,
+	// content controls are rendered differently as part of the ListView.
+	if (
+		group === 'content' &&
+		!! context[ isInListViewBlockSupportTreeKey ] &&
+		!! context[ mayDisplayPatternEditingControlsKey ]
+	) {
 		if ( context[ mayDisplayControlsKey ] ) {
 			return (
 				<StyleProvider document={ document }>
@@ -97,6 +91,9 @@ export default function InspectorControlsFill( {
 				</StyleProvider>
 			);
 		}
+
+		// When using the ListView fill, only render controls for the selected
+		// block. Other blocks return `null`.
 		return null;
 	}
 
