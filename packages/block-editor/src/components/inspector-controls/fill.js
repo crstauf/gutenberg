@@ -8,8 +8,6 @@ import {
 import warning from '@wordpress/warning';
 import deprecated from '@wordpress/deprecated';
 import { useEffect, useContext } from '@wordpress/element';
-import { useSelect } from '@wordpress/data';
-import { hasBlockSupport } from '@wordpress/blocks';
 
 /**
  * Internal dependencies
@@ -18,42 +16,13 @@ import {
 	useBlockEditContext,
 	mayDisplayControlsKey,
 	mayDisplayPatternEditingControlsKey,
+	isInListViewBlockSupportTreeKey,
 } from '../block-edit/context';
 import groups from './groups';
 import { ListViewContentFill } from './list-view-content-popover';
-import { store as blockEditorStore } from '../../store';
 
 const PATTERN_EDITING_GROUPS = [ 'content', 'list' ];
 const TEMPLATE_PART_GROUPS = [ 'default', 'settings', 'advanced' ];
-
-/**
- * Determines whether a block's content controls should be routed to the
- * List View content popover instead of the normal inspector content slot.
- *
- * @param {string}  clientId The block's client ID.
- * @param {boolean} isActive Whether the conditions for routing are potentially met.
- * @return {boolean} Whether to route to the List View content popover.
- */
-function useHasListViewParent( clientId, isActive ) {
-	return useSelect(
-		( select ) => {
-			if ( ! isActive ) {
-				return false;
-			}
-			const { getBlockParents, getBlockName } =
-				select( blockEditorStore );
-			const parents = getBlockParents( clientId, false );
-			return parents.some( ( parentId ) => {
-				const parentName = getBlockName( parentId );
-				return (
-					parentName === 'core/navigation' ||
-					hasBlockSupport( parentName, 'listView' )
-				);
-			} );
-		},
-		[ clientId, isActive ]
-	);
-}
 
 export default function InspectorControlsFill( {
 	children,
@@ -78,10 +47,10 @@ export default function InspectorControlsFill( {
 	// Check if this block is inside a section with a parent that has List View
 	// block support. When true, content fills are handled by the List View
 	// popover rather than the normal content inspector slot.
-	const hasListViewParent = useHasListViewParent(
-		context.clientId,
-		group === 'content' && !! context[ mayDisplayPatternEditingControlsKey ]
-	);
+	const hasListViewParent =
+		group === 'content' &&
+		!! context[ mayDisplayPatternEditingControlsKey ] &&
+		!! context[ isInListViewBlockSupportTreeKey ];
 
 	const Fill = groups[ group ]?.Fill;
 	if ( ! Fill ) {
