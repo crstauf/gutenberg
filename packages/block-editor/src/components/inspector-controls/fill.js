@@ -78,7 +78,7 @@ export default function InspectorControlsFill( {
 	}
 
 	// When inside a section with a parent that has ListView block support,
-	// content controls are rendered differently as part of the ListView.
+	// content controls are rendered as part of the ListView via a popover.
 	if (
 		group === 'content' &&
 		!! context[ isInListViewBlockSupportTreeKey ] &&
